@@ -1,0 +1,17 @@
+{
+  "name": "project-sm-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "server:dev": "python app.py",
+    "build:server": "powershell -ExecutionPolicy Bypass -File desktop/build-server.ps1",
+    "icon": "tauri icon desktop-assets/project-sm.svg --output src-tauri/icons",
+    "prepare:desktop": "npm run icon && npm run build:server",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

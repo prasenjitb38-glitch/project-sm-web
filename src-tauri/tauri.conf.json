@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Project SM",
+  "version": "0.1.0",
+  "identifier": "com.projectsm.desktop",
+  "build": { "beforeDevCommand": "python app.py", "devUrl": "http://127.0.0.1:5000", "beforeBuildCommand": "npm run prepare:desktop", "frontendDist": "../desktop-ui" },
+  "app": { "windows": [{ "label": "main", "title": "Project SM", "width": 1440, "height": 900, "minWidth": 1024, "minHeight": 640, "resizable": true, "maximizable": true, "visible": false, "url": "splashscreen.html" }], "security": { "csp": null } },
+  "bundle": { "active": true, "targets": ["nsis"], "externalBin": ["binaries/project-sm-server"], "icon": ["icons/icon.ico"], "windows": { "nsis": { "installMode": "currentUser", "displayLanguageSelector": true } } }
+}

@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+node_modules/
+src-tauri/target/
+src-tauri/binaries/*.exe
+src-tauri/icons/
+desktop/project-sm-server.exe
+mobile/.dart_tool/
+mobile/build/
+mobile/.idea/
+npm-debug.log
+*.iml
+hs_err_pid*.log
