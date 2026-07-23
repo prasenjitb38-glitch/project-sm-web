@@ -34,6 +34,7 @@ button{background:#1d6fff;color:#fff;border:none;padding:10px 18px;border-radius
 #scannerStatus{font-size:13px;color:#bcd1ec}.scanner-table-wrap{overflow:auto}
 .scanner-table{width:100%;border-collapse:collapse;min-width:760px;font-size:14px}.scanner-table th,.scanner-table td{padding:10px;border-bottom:1px solid #234;text-align:left}.scanner-table th{color:#9cc4ff}.score{font-weight:bold;color:#facc15}.fresh{color:#86efac}.tested{color:#fbbf24}.scan-symbol{padding:5px 9px;font-weight:bold}
 .fullscreen-btn{font-size:18px;line-height:1;padding:10px 13px}
+.fullscreen-panel{position:relative}.panel-fullscreen{position:absolute;right:8px;top:8px;padding:3px 7px;background:#102b4d;border:1px solid #31537a;border-radius:5px;font-size:12px;z-index:20;line-height:1}.fullscreen-panel:fullscreen{width:100%;height:100%;padding:18px;background:#030812;overflow:auto}.fullscreen-panel:fullscreen .panel-fullscreen{right:14px;top:14px}
 @media(min-width:1000px){
 body{overflow:hidden}.workspace{height:100vh;min-height:680px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);grid-template-rows:48px 54px 164px minmax(270px,1fr) 144px;gap:0;overflow:hidden}.header{grid-column:1/-1;grid-row:1;height:auto;font-size:21px}.topbar{grid-column:1/-1;grid-row:2;padding:8px 20px}.topbar #search{height:38px}.topbar button{padding:9px 14px}.dashboard{grid-column:1/-1;grid-row:3;padding:0 20px 8px;overflow:hidden}.dashboard-title{height:29px;padding:5px 0}.dashboard-title h2{font-size:18px}.overview{height:65px;gap:8px}.market-card,.summary-card,.dashboard-table{padding:7px}.market-card small{font-size:11px}.market-card strong{font-size:15px;margin:3px 0}.market-card span{font-size:11px}.dashboard-bottom{height:59px;margin-top:5px;gap:8px}.dashboard-table h3{font-size:13px}.dashboard-table th,.dashboard-table td{padding:3px 5px;font-size:10px}.summary-grid{gap:6px}.summary-card{font-size:10px}.summary-card b{font-size:16px;margin-top:1px}.scanner-panel{grid-column:2;grid-row:4;margin:0 20px 8px 5px;padding:9px;min-height:0}.scanner-head{gap:7px;margin-bottom:5px}.scanner-head h2{font-size:14px}.scanner-head select,.scanner-head button{padding:7px;font-size:11px}.scanner-table-wrap{max-height:calc(100% - 42px);overflow:auto}.scanner-table{min-width:620px;font-size:11px}.scanner-table th,.scanner-table td{padding:5px}.main{grid-column:1;grid-row:4;height:100%;padding:0 5px 8px 20px;display:block;min-height:0}.main .sidebar{display:none}.chart-box{height:100%}.chart-title{padding:9px 13px;font-size:16px}.timeframes{padding:5px 8px}.timeframes button{padding:6px 10px;font-size:11px}.panel-section{margin:0 5px 10px 20px;padding:9px;min-height:0;overflow:auto}.panel-section h2{font-size:14px;margin-bottom:5px}.watch-grid{grid-template-columns:1fr;gap:6px}.watch-list{gap:5px}.watch-chip{padding:5px 7px;font-size:11px}#watchlistPanel{grid-column:1;grid-row:5;margin-left:20px;margin-right:5px}#alertsPanel{grid-column:2;grid-row:5;margin-left:5px;margin-right:20px}#settingsPanel{display:none}
 }
@@ -44,14 +45,14 @@ body:fullscreen .app-sidebar{width:72px;padding:16px 8px}body:fullscreen .brand{
   .main{grid-column:1/-1;grid-row:3;padding:0 20px 6px;height:100%}.chart-title{font-size:15px}.scanner-panel{grid-column:1;grid-row:4;margin:0 5px 6px 20px}.scanner-head h2{font-size:13px}.scanner-table-wrap{max-height:88px}.scanner-table{min-width:540px}
   #alertsPanel{grid-column:2;grid-row:4;margin:0 20px 6px 5px}.panel-section{background:#102b4d;border-radius:12px}.panel-section h2{font-size:13px}.panel-section p{font-size:11px}
   #multiPanel{display:block;grid-column:1;grid-row:5;margin:0 5px 6px 20px}#topZonesPanel{display:block;grid-column:2;grid-row:5;margin:0 20px 6px 5px}#settingsPanel{display:none}
-  .multi-grid{display:grid;grid-template-columns:42% 58%;gap:8px;height:70px;font-size:10px}.multi-grid button{font-size:9px;padding:4px 7px;margin:0 3px 3px 0}.multi-grid p{margin:2px 0}.buy-tag{background:#22c55e;color:#06250f;border-radius:4px;padding:2px 6px}.mini-candles{padding:7px;color:#fca5a5;background:linear-gradient(145deg,transparent 42%,#ef4444 43%,transparent 45%),#0b1d32;border-radius:6px;text-align:right}.mini-candles span{display:block;color:#86efac;margin-top:31px;text-align:left}
+  .multi-grid{display:grid;grid-template-columns:42% 58%;gap:8px;height:70px;font-size:10px}.multi-grid button{font-size:9px;padding:4px 7px;margin:0 3px 3px 0}.multi-grid p{margin:2px 0}.buy-tag{background:#22c55e;color:#06250f;border-radius:4px;padding:2px 6px}.mini-candles{padding:4px;background:#071321;border:1px solid #1a2c43;border-radius:6px;overflow:hidden;min-width:0}.mini-candles svg{width:100%;height:100%;display:block}.mini-candles .empty-preview{padding:13px 7px;color:#9fb4cc;text-align:center}.mini-candles .preview-label{font-size:9px;fill:#b9cbe1}.mini-candles .preview-price{font-size:9px;fill:#86efac}
 }
 /* Desktop dashboard: matches the compact Project SM reference layout. */
 .sentiment-gauge{width:118px;height:58px;margin:5px auto 0;border-radius:118px 118px 0 0;background:conic-gradient(from 270deg at 50% 100%,#ef4444 0 23%,#facc15 23% 48%,#22c55e 48% 72%,#1f334b 72% 100%);position:relative;overflow:hidden}.sentiment-gauge::after{content:'';position:absolute;inset:10px 10px 0;background:#102b4d;border-radius:100px 100px 0 0}.sentiment-gauge div{position:absolute;z-index:1;bottom:4px;width:100%;text-align:center}.sentiment-gauge b{display:block;color:#36e879;font-size:13px}.sentiment-gauge small{font-size:9px;color:#aec2dd}
 .trend-panel p{font-size:11px;margin:7px 0;color:#bcd1ec}.trend-panel p:first-of-type{font-size:13px;color:#fff;font-weight:bold}.trend-panel b{float:right}.trend-panel .positive{color:#36e879}.trend-panel .negative{color:#ff6161}
 @media(min-width:1000px){
   .app-sidebar{width:185px;padding:18px 10px}.brand{font-size:18px;padding:2px 8px 18px}.nav-menu button{padding:10px 10px;font-size:13px}.workspace{margin-left:185px}
-  .workspace{grid-template-columns:minmax(0,1.30fr) minmax(0,.72fr) minmax(0,.44fr) minmax(0,.44fr);grid-template-rows:40px 70px minmax(225px,1fr) 160px}
+  .workspace{grid-template-columns:minmax(0,1.50fr) minmax(0,.52fr) minmax(0,.44fr) minmax(0,.44fr);grid-template-rows:40px 70px minmax(225px,1fr) 160px}
   .dashboard{display:grid;grid-template-columns:minmax(0,70%) minmax(0,30%);gap:10px;align-items:start}
   .dashboard .overview{grid-column:1;grid-row:1;width:auto;height:68px}
   .dashboard .dashboard-bottom{display:block;position:static;grid-column:2;grid-row:1;width:auto;height:68px;margin:0}
@@ -76,6 +77,53 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 .chart-box{min-height:520px}
 #chart{height:420px;flex:none}
 }
+/* Requested dashboard arrangement. */
+.app-sidebar > .connection:not(.sentiment-sidebar){display:none}.sentiment-sidebar{margin-top:auto;color:#dcecff;text-align:left;padding:10px}.sentiment-sidebar h3{font-size:12px;margin:0 0 5px}.sentiment-sidebar .sentiment-gauge{transform:scale(.82);transform-origin:left bottom;margin:0}.sentiment-sidebar .sentiment-gauge::after{background:#071321}
+#scannerPanel,.chart-box,#multiPanel,#topZonesPanel,#stockTrendPanel{position:relative}.panel-fullscreen{position:absolute;right:8px;top:8px;padding:3px 7px;background:#102b4d;border:1px solid #31537a;border-radius:5px;font-size:12px;z-index:20;line-height:1}.panel-is-fullscreen:fullscreen{width:100%;height:100%;padding:18px;background:#030812;overflow:auto}.panel-is-fullscreen:fullscreen .panel-fullscreen{right:14px;top:14px}
+.market-alert{overflow:hidden}.market-alert small{color:#9cc4ff}.market-alert strong{font-size:12px;line-height:1.3;margin:5px 0;color:#eaf2ff}.market-alert span{font-size:10px;color:#86efac}
+@media(min-width:1000px){
+  #multiPanel{grid-column:1 / 2;grid-row:4;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(155px,.75fr);column-gap:8px;align-content:start}
+  #multiPanel>#multiTitle{grid-column:1 / -1}
+  #multiPanel>.multi-grid{grid-column:1;grid-row:2}
+  #multiPanel>#stockTrendPanel{display:block!important;grid-column:2;grid-row:2;margin:0;padding:7px;border:1px solid #1a2c43;border-radius:8px;min-height:112px}
+  .workspace{grid-template-columns:minmax(0,1.70fr) minmax(0,.32fr) minmax(0,.44fr) minmax(0,.44fr);grid-template-rows:40px 70px minmax(225px,1fr) 160px}
+  .dashboard .overview{grid-template-columns:repeat(4,1fr)}
+  #scannerPanel{grid-column:2 / -1;grid-row:3;align-self:stretch;height:auto;margin:6px 20px 6px 5px}
+  #topZonesPanel{grid-column:2 / -1;grid-row:4;align-self:stretch;height:auto;margin:0 20px 6px 5px;padding:9px}
+  #alertsPanel,#sentimentPanelLegacy{display:none}
+  #stockTrendPanel{grid-column:2;grid-row:4;align-self:stretch;height:auto;margin:0 5px 6px 5px;padding:9px}
+}
+/* Final compact dashboard cleanup. */
+.brand-logo{width:126px;height:104px;object-fit:contain;object-position:center;border-radius:0;margin-bottom:0}
+#sentimentPanel{display:none!important}
+@media(min-width:1000px){
+  .dashboard{grid-template-columns:minmax(0,62%) minmax(0,38%)}
+  .main{grid-column:1 / 2;grid-row:3;padding:6px 5px 6px 20px}
+  #scannerPanel{grid-column:2 / -1;grid-row:3;margin-left:5px}
+  .dashboard .overview{height:58px;gap:6px;grid-template-columns:repeat(3,118px) minmax(145px,1fr)}
+  .dashboard .market-card{padding:5px 7px;min-height:58px}
+  .dashboard .market-card small{font-size:10px}.dashboard .market-card strong{font-size:13px;margin:2px 0}.dashboard .market-card span{font-size:9px}
+  .dashboard .dashboard-bottom{height:58px}
+  #openScanner{display:none}
+}
+.fundamental-panel{display:none;background:#030812;color:#eaf2ff;padding:28px;overflow:auto}.fundamental-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px;border-bottom:1px solid #1a2c43;padding-bottom:14px}.fundamental-head h1{font-size:23px}.fundamental-head p{font-size:13px;color:#9cc4ff;margin-top:5px}.fundamental-card{max-width:860px;background:#091727;border:1px solid #1a2c43;border-radius:14px;padding:18px}.fundamental-card h2{font-size:17px;margin-bottom:6px}.fundamental-note{font-size:12px;color:#a9bdd3;margin-bottom:15px}.fundamental-table{width:100%;border-collapse:collapse}.fundamental-table th,.fundamental-table td{padding:11px 12px;text-align:left;border-bottom:1px solid #172a40}.fundamental-table th{color:#9cc4ff}.fundamental-table td:last-child{color:#86efac;font-weight:bold}.workspace.fundamental-open> :not(#fundamentalPanel){display:none!important}.workspace.fundamental-open{display:block!important;height:100vh!important;overflow:hidden!important;margin-left:185px}.workspace.fundamental-open #fundamentalPanel{display:block;height:100vh}
+@media(max-width:768px){.workspace.fundamental-open{margin-left:0}.fundamental-panel{padding:14px}.fundamental-head h1{font-size:18px}.fundamental-table th,.fundamental-table td{padding:8px;font-size:12px}}
+/* Screenshot-matched dashboard grid. */
+@media(min-width:1000px){
+  .workspace{grid-template-columns:minmax(0,1.30fr) minmax(0,.72fr) minmax(0,.44fr) minmax(0,.44fr)}
+  .main{grid-column:1 / 2;grid-row:3;padding:6px 5px 6px 20px}
+  #scannerPanel{grid-column:2 / -1;grid-row:3;margin:6px 20px 6px 5px}
+  #multiPanel{grid-column:1;grid-row:4;display:block;margin:0 5px 6px 20px;padding:9px}
+  #topZonesPanel{grid-column:2 / 4;grid-row:4;margin:0 5px 6px 5px;padding:9px}
+  #stockTrendPanel{display:block!important;grid-column:4;grid-row:4;margin:0 20px 6px 5px;padding:9px}
+}
+.fundamental-results{max-width:1100px;margin-top:16px}.fundamental-scan-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.fundamental-scan-head h2{margin:0 auto 0 0}.fundamental-scan-head select{background:#0d2239;color:#fff;border:1px solid #294665;border-radius:7px;padding:8px}.fundamental-scan-head span{font-size:12px;color:#bcd1ec}.fundamental-results-wrap{max-height:310px;overflow:auto}.fundamental-results-wrap .fundamental-table{min-width:720px}.fundamental-results-wrap .fundamental-table td:last-child{color:#eaf2ff;font-weight:normal}.fundamental-score{color:#facc15!important;font-weight:bold!important}
+.criteria-card{max-width:1100px;padding:11px 14px}.criteria-card h2{font-size:15px}.criteria-card .fundamental-note{margin-bottom:8px}.fundamental-criteria-grid{display:grid;grid-template-columns:repeat(10,minmax(92px,1fr));gap:7px}.fundamental-criteria-grid label{display:flex;flex-direction:column;gap:4px;font-size:10px;color:#9cc4ff}.fundamental-criteria-grid select{width:100%;padding:6px;background:#0d2239;color:#fff;border:1px solid #294665;border-radius:6px;font-size:10px}.fundamental-criteria-grid select:focus{outline:1px solid #1d6fff}@media(max-width:1100px){.fundamental-criteria-grid{grid-template-columns:repeat(5,minmax(105px,1fr))}}@media(max-width:650px){.fundamental-criteria-grid{grid-template-columns:repeat(2,1fr)}}
+.criteria-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.criteria-title button{padding:6px 12px;font-size:11px}.feature-panel{display:none;background:#030812;color:#eaf2ff;padding:24px;overflow:auto}.feature-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #1a2c43;padding-bottom:13px;margin-bottom:14px}.feature-head h1{font-size:22px}.feature-content{min-height:calc(100vh - 105px)}.workspace.feature-open> :not(#featurePanel){display:none!important}.workspace.feature-open{display:block!important;height:100vh!important;overflow:hidden!important}.workspace.feature-open #featurePanel{display:block;height:100vh}.feature-content>#chartArea,.feature-content>#scannerPanel,.feature-content>#multiPanel,.feature-content>#alertsPanel,.feature-content>#settingsPanel{display:block!important;position:static!important;width:100%!important;height:calc(100vh - 115px)!important;margin:0!important;padding:0!important}.feature-content>#scannerPanel,.feature-content>#multiPanel,.feature-content>#alertsPanel,.feature-content>#settingsPanel{height:auto!important;min-height:420px!important;padding:16px!important}.feature-content>#settingsPanel{display:block!important}.feature-content>#alertsPanel{display:block!important}.feature-content .chart-box{height:calc(100vh - 115px)!important}.feature-content #chart{min-height:500px}.feature-content #stockTrendPanel{display:block!important}.app-sidebar{width:160px}.workspace{margin-left:160px}.brand-logo{width:108px;height:90px}.nav-menu button{font-size:12px;padding:9px 8px}.workspace.fundamental-open{margin-left:160px}
+@media(max-width:768px){.feature-panel{padding:14px}.workspace.feature-open{margin-left:0}.feature-head h1{font-size:18px}}
+.chart-tools-label{font-size:10px;color:#9cc4ff;margin-left:5px}.drawing-status{font-size:10px;color:#bcd1ec;align-self:center}.timeframes .tool-active{background:#f59e0b;color:#111827}.chart-tf-select{height:32px;background:rgba(13,34,57,.38);color:#d9ebff;border:1px solid rgba(85,128,176,.5);border-radius:7px;padding:0 7px;font-size:11px;cursor:pointer}.timeframes .tf{background:rgba(13,34,57,.26);border:1px solid rgba(85,128,176,.42);color:#d9ebff;transition:background .16s,border-color .16s,transform .16s}.timeframes .tf:hover{background:rgba(29,111,255,.42);border-color:#65a2ff}.timeframes .tf.active{background:rgba(29,111,255,.78);border-color:#79adff;box-shadow:0 0 0 1px rgba(121,173,255,.24)}.chart-action-status{font-size:10px;color:#92b4d8;align-self:center;min-width:62px}.chart-action-status.updated{color:#86efac}
+/* Transparent vertical chart toolbar on the left. */
+.chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
 </style>
 
 </head>
@@ -83,7 +131,7 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 <body>
 
 <aside class="app-sidebar">
-    <div class="brand"><img class="brand-logo" src="{{ url_for('static', filename='images/advanced-stock-market-scanner.png') }}" alt="Advanced Stock Market Scanner logo"><span class="brand-caption">Advanced Stock Market Scanner</span></div>
+    <div class="brand"><img class="brand-logo" src="{{ url_for('static', filename='images/advanced-stock-market-scanner.png') }}" alt="Advanced Stock Market Scanner logo"></div>
     <nav class="nav-menu">
         <button class="active" data-target="dashboard">▣ &nbsp;Dashboard</button>
         <button data-target="chartArea">⌁ &nbsp;Live Market</button>
@@ -92,7 +140,9 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
         <button data-target="chartArea">⌘ &nbsp;Multi-Timeframe</button>
         <button data-target="alertsPanel">♧ &nbsp;Alerts</button>
         <button data-target="settingsPanel">⚙ &nbsp;Settings</button>
+        <button id="fundamentalButton" data-target="fundamentalPanel">Fundamental Scan</button>
     </nav>
+    <section id="sidebarSentiment" class="connection sentiment-sidebar"><h3>Market Sentiment</h3><div class="sentiment-gauge"><div><b>Bullish</b><small>Market trend</small></div></div></section>
     <div class="connection">● Connected<br>NSE data available</div>
 </aside>
 <div class="workspace">
@@ -121,7 +171,26 @@ Refresh
     <div class="dashboard-bottom scanner-summary-top"><h3>Scanner Summary</h3><div class="summary-grid"><div class="summary-card">Scanned<b id="summaryScanned">0</b></div><div class="summary-card">Supply<b id="summarySupply">0</b></div><div class="summary-card">Demand<b id="summaryDemand">0</b></div><div class="summary-card">Premium<b id="summaryPremium">0</b></div></div></div>
 </section>
 
-<section id="scannerPanel" class="scanner-panel">
+<section id="featurePanel" class="feature-panel"><div class="feature-head"><h1 id="featureTitle">Feature</h1><button id="closeFeature" type="button">Back to Dashboard</button></div><div id="featureContent" class="feature-content"></div></section>
+
+<section id="fundamentalPanel" class="fundamental-panel">
+    <div class="fundamental-head"><div><h1>Fundamental Scan Analysis</h1><p id="fundamentalCompany">Select a stock from search or scanner</p></div><button id="closeFundamental" type="button">Back to Dashboard</button></div>
+    <div class="fundamental-card criteria-card"><div class="criteria-title"><h2>Quality Company Checklist</h2><button id="resetFundamentalDefaults" type="button">Default</button></div><p class="fundamental-note">Select the rules you want, then run the stock scan below.</p><div class="fundamental-criteria-grid">
+        <label>OPM<select data-criteria="opm"><option value=".10">≥ 10%</option><option value=".15">≥ 15%</option><option value=".20" selected>≥ 20%</option><option value=".25">≥ 25%</option></select></label>
+        <label>EPS<select data-criteria="eps"><option value="stable" selected>Stable</option><option value="positive">Positive</option></select></label>
+        <label>D/E<select data-criteria="debt_equity"><option value=".5">Less than 0.5</option><option value="1" selected>Less than 1</option><option value="2">Less than 2</option></select></label>
+        <label>ROE<select data-criteria="roe"><option value=".10">≥ 10%</option><option value=".15" selected>≥ 15%</option><option value=".20">≥ 20%</option></select></label>
+        <label>ROCE<select data-criteria="roce"><option value=".10">≥ 10%</option><option value=".15" selected>≥ 15%</option><option value=".20">≥ 20%</option></select></label>
+        <label>Net Profit<select data-criteria="interest_multiple"><option value="1">≥ 1x Interest</option><option value="2" selected>≥ 2x Interest</option><option value="3">≥ 3x Interest</option></select></label>
+        <label>Promoter<select data-criteria="promoter"><option value="stable" selected>Stable</option><option value="increasing">Increasing</option></select></label>
+        <label>Cash Flow<select data-criteria="cash_flow"><option value="positive" selected>Positive</option><option value="strong">Strong Positive</option></select></label>
+        <label>Balance Sheet<select data-criteria="balance_sheet"><option value="increasing" selected>Increasing</option><option value="stable">Stable</option></select></label>
+        <label>10Y Growth<select data-criteria="ten_year_growth"><option value=".05">≥ 5%</option><option value=".10" selected>≥ 10%</option><option value=".15">≥ 15%</option></select></label>
+    </div></div>
+    <div class="fundamental-card fundamental-results"><div class="fundamental-scan-head"><h2>Stock Scan Results</h2><select id="fundamentalUniverse"><option value="nifty50" selected>NIFTY 50</option><option value="nifty100">NIFTY 100</option><option value="nifty200">NIFTY 200</option><option value="nifty500">NIFTY 500</option></select><button id="runFundamentalScan" type="button">Scan Fundamentals</button><span id="fundamentalStatus">Ready to scan.</span></div><div class="fundamental-results-wrap"><table class="fundamental-table"><thead><tr><th>Symbol</th><th>Company</th><th>Score</th><th>Passed</th><th>OPM</th><th>ROE</th><th>D/E</th></tr></thead><tbody id="fundamentalRows"><tr><td colspan="7">Select an index and run Fundamental Scan.</td></tr></tbody></table></div></div>
+</section>
+
+<section id="scannerPanel" class="scanner-panel fullscreen-panel">
     <div class="scanner-head">
         <h2>Strong & Fresh Zone Scanner</h2>
         <select id="scannerUniverse">
@@ -138,15 +207,15 @@ Refresh
     </div>
     <div class="scanner-table-wrap">
         <table class="scanner-table">
-            <thead><tr><th>Symbol</th><th>Zone Type</th><th>Timeframe</th><th>Score</th><th>Status</th><th>Entry Range</th><th>Exit Range</th></tr></thead>
-            <tbody id="scannerRows"><tr><td colspan="7">Run the scanner to find strong fresh or tested zones.</td></tr></tbody>
+            <thead><tr><th>Symbol</th><th>Pattern / Zone</th><th>TF</th><th>Strength</th><th>Score</th><th>Status</th><th>Entry Range</th><th>Target</th></tr></thead>
+            <tbody id="scannerRows"><tr><td colspan="8">Run the scanner to find score 60+ supply and demand zones.</td></tr></tbody>
         </table>
     </div>
 </section>
 
 <div id="chartArea" class="main">
 
-<div class="chart-box">
+<div class="chart-box fullscreen-panel">
 
     <div class="chart-title">
 
@@ -157,8 +226,15 @@ Refresh
     </div>
 
     <div class="timeframes">
-
-        
+        <select id="intradayTimeframe" class="chart-tf-select" aria-label="Intraday chart timeframe">
+            <option value="">Intraday</option>
+            <option value="5m">5m</option>
+            <option value="15m">15m</option>
+            <option value="1h">1Hr</option>
+            <option value="4h">4Hr</option>
+            <option value="6h">6Hr</option>
+            <option value="12h">12Hr</option>
+        </select>
         <button class="tf" data-period="1d">1D</button>
 
         <button class="tf" data-period="1wk">1W</button>
@@ -173,8 +249,11 @@ Refresh
 
         <button class="tf" data-period="5y">5Y</button>
         <button id="zonesToggle" class="tf active" type="button">Zones: ON</button>
+        <span id="chartActionStatus" class="chart-action-status">Chart: 6M</span>
 
     </div>
+
+    <div id="chartTools" class="chart-tools"><button id="horizontalLineTool" type="button" title="Click chart to add a horizontal level">H</button><button id="trendLineTool" type="button" title="Click two chart points to draw a trend line">T</button><button id="clearDrawingTools" type="button" title="Clear drawings">C</button><button id="fitChartTool" type="button" title="Fit chart">F</button><span id="drawingStatus" class="drawing-status">Ready</span></div>
 
     <div id="chart"><div id="zoneLayer" class="zone-layer"></div></div>
 
@@ -183,7 +262,7 @@ Refresh
 </div>
 
 <section id="alertsPanel" class="panel-section"><h2>Recent Alerts</h2><p id="alertMessage" style="color:#bcd1ec">Scanner alerts will appear here when a premium zone is found.</p></section>
-<section id="multiPanel" class="panel-section"><h2 id="multiTitle">Multi-Timeframe Analysis</h2><div class="multi-grid"><div><button class="tf active" data-multi-tf="1d">1D</button><button class="tf" data-multi-tf="1wk">1W</button><button class="tf" data-multi-tf="1mo">1M</button><p>Trend <b id="multiTrend">Loading…</b></p><p>Strength <b id="multiStrength">—</b></p><p>Structure <b id="multiStructure">—</b></p><p>Overall View <b id="multiOverall">—</b></p></div><div id="multiPreview" class="mini-candles">Select a stock<br><span>Multi-timeframe data</span></div></div></section>
+<section id="multiPanel" class="panel-section"><h2 id="multiTitle">Multi-Timeframe Analysis</h2><div class="multi-grid"><div><button class="tf active" data-multi-tf="1d">Dly</button><button class="tf" data-multi-tf="1wk">Wkly</button><button class="tf" data-multi-tf="1mo">Mly</button><button class="tf" data-multi-tf="3mo">Qly</button><button class="tf" data-multi-tf="6mo">Hly</button><button class="tf" data-multi-tf="1y">Yrly</button><p>Trend <b id="multiTrend">Loading…</b></p><p>Strength <b id="multiStrength">—</b></p><p>Structure <b id="multiStructure">—</b></p><p>HTF Sup <b id="multiSupport">—</b></p><p>HTF Res <b id="multiResistance">—</b></p><p>Overall View <b id="multiOverall">—</b></p></div><div id="multiPreview" class="mini-candles"><div class="empty-preview">Select a stock to show chart</div></div></div></section>
 <section id="topZonesPanel" class="panel-section dashboard-table"><h2>Top Supply &amp; Demand Zones</h2><table><thead><tr><th>Symbol</th><th>TF</th><th>Type</th><th>Range</th><th>Score</th></tr></thead><tbody id="dashboardZoneRows"><tr><td colspan="5">Run Scanner to populate zones.</td></tr></tbody></table></section>
 <section id="stockTrendPanel" class="panel-section trend-panel"><h2>Selected Stock Trend</h2><p><span id="trendSymbol">Select a stock</span></p><p>Stock: <b id="stockTrendValue">—</b></p><p>Sector: <b id="sectorName">—</b></p><p>Sector Trend: <b id="sectorTrendValue">—</b></p></section>
 <section id="sentimentPanel" class="panel-section"><h2>Market Sentiment</h2><div class="sentiment-gauge"><div><b>Bullish</b><small>Market trend</small></div></div></section>
@@ -234,7 +313,8 @@ function renderZones(){
         block.style.top=`${Math.min(yTop,yBottom)}px`;
         block.style.height=`${Math.max(3,Math.abs(yBottom-yTop))}px`;
         const state=zone.fresh ? "FRESH" : "TESTED";
-        block.innerHTML=`<span class="zone-label">${zone.pattern || ""} SCORE ${zone.score || "-"} ${state} ${zone.type.toUpperCase()}</span>`;
+        const htf=zone.higher_timeframe_confirmed ? `HTF: ${zone.higher_timeframe}` : 'HTF: No confirmation';
+        block.innerHTML=`<span class="zone-label">${zone.pattern || ""} • ${zone.grade || "ZONE"} • ${state} • ${zone.score || "-"}/100<br>${htf}</span>`;
         layer.appendChild(block);
     });
 }
@@ -271,17 +351,63 @@ document.getElementById("zonesToggle").onclick=()=>{
     zonesVisible=!zonesVisible;
     document.getElementById("zonesToggle").innerText=`Zones: ${zonesVisible ? "ON" : "OFF"}`;
     document.getElementById("zonesToggle").classList.toggle("active",zonesVisible);
+    showChartAction(`Zones: ${zonesVisible ? "ON" : "OFF"}`);
     renderZones();
 };
+
+// Chart drawing tools: choose H-Line then click once, or Trend then click twice.
+let activeDrawingTool='';
+let trendStart=null;
+let manualPriceLines=[];
+let manualTrendSeries=[];
+const drawingStatus=document.getElementById('drawingStatus');
+const chartActionStatus=document.getElementById('chartActionStatus');
+let chartActionTimer=null;
+function showChartAction(message){
+    chartActionStatus.innerText=message;
+    chartActionStatus.classList.add('updated');
+    clearTimeout(chartActionTimer);
+    chartActionTimer=setTimeout(()=>chartActionStatus.classList.remove('updated'),1200);
+}
+function setDrawingTool(tool){
+    activeDrawingTool=tool; trendStart=null;
+    document.getElementById('horizontalLineTool').classList.toggle('tool-active',tool==='horizontal');
+    document.getElementById('trendLineTool').classList.toggle('tool-active',tool==='trend');
+    drawingStatus.innerText=tool==='horizontal' ? 'Click chart for level' : tool==='trend' ? 'Click first trend point' : 'Ready';
+    showChartAction(tool==='horizontal' ? 'H-Line: click chart' : tool==='trend' ? 'Trend: first point' : 'Tools: ready');
+}
+document.getElementById('horizontalLineTool').onclick=()=>setDrawingTool(activeDrawingTool==='horizontal'?'':'horizontal');
+document.getElementById('trendLineTool').onclick=()=>setDrawingTool(activeDrawingTool==='trend'?'':'trend');
+document.getElementById('fitChartTool').onclick=()=>{chart.timeScale().fitContent(); renderZones(); showChartAction('Chart fitted');};
+document.getElementById('clearDrawingTools').onclick=()=>{
+    manualPriceLines.forEach(line=>series.removePriceLine(line)); manualPriceLines=[];
+    manualTrendSeries.forEach(line=>chart.removeSeries(line)); manualTrendSeries=[];
+    setDrawingTool('');
+    showChartAction('Drawings cleared');
+};
+chart.subscribeClick(param=>{
+    if(!activeDrawingTool || !param.point || !param.time) return;
+    const price=series.coordinateToPrice(param.point.y);
+    if(price===null || price===undefined) return;
+    if(activeDrawingTool==='horizontal'){
+        manualPriceLines.push(series.createPriceLine({price,color:'#f59e0b',lineWidth:1,lineStyle:2,axisLabelVisible:true,title:'Manual Level'}));
+        setDrawingTool('');
+        return;
+    }
+    if(!trendStart){ trendStart={time:param.time,value:price}; drawingStatus.innerText='Click second trend point'; showChartAction('Trend: second point'); return; }
+    const trend=chart.addLineSeries({color:'#a78bfa',lineWidth:2,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false});
+    trend.setData([trendStart,{time:param.time,value:price}]); manualTrendSeries.push(trend);
+    setDrawingTool('');
+});
 
 let scannerPoller=null;
 function renderScannerRows(results){
     const rows=document.getElementById("scannerRows");
-    if(!results.length){ rows.innerHTML='<tr><td colspan="7">No fresh Score 70+ zones found yet.</td></tr>'; return; }
+    if(!results.length){ rows.innerHTML='<tr><td colspan="8">No Score 60+ zones found with the current rules.</td></tr>'; return; }
     rows.innerHTML=results.slice(0,100).map(item=>`<tr>
         <td><button class="scan-symbol" data-symbol="${item.symbol}">${item.symbol}</button><br><small>${item.company}</small></td>
-        <td><strong>${item.pattern}</strong><br><small>${item.pattern_name} - ${item.zone_type}</small></td><td>${item.timeframe}</td>
-        <td class="score">${item.score}/100<br><small>${item.stars} ${item.grade}</small></td><td class="${item.status.toLowerCase()}">${item.status}</td>
+        <td><strong>${item.pattern}</strong><br><small>${item.pattern_name} · ${item.zone_type}</small></td><td>${item.timeframe}</td>
+        <td><small>${item.stars}<br>${item.strength}</small></td><td class="score">${item.score}/100</td><td class="${item.status.toLowerCase()}">${item.status}<br><small>Base ${item.base_candles} · ${item.departure_atr}× ATR<br>HTF: ${item.htf}</small></td>
         <td>${item.entry}</td><td>${item.exit}</td></tr>`).join('');
     rows.querySelectorAll('.scan-symbol').forEach(button=>button.onclick=()=>{
         loadChart(button.dataset.symbol); document.getElementById('chart').scrollIntoView({behavior:'smooth'});
@@ -321,25 +447,45 @@ async function updateStockTrend(symbol, info){
         document.getElementById('sectorTrendValue').innerText='Unavailable';
     }
 }
-function candlesForMultiTimeframe(candles){
-    const step={"1d":1,"1wk":5,"1mo":21}[multiTimeframe] || 1;
-    return candles.filter((_, index)=>index % step === 0 || index === candles.length-1);
+function renderMultiChart(candles, trend){
+    const target=document.getElementById('multiPreview');
+    const bars=candles.slice(-42);
+    if(!bars.length){ target.innerHTML='<div class="empty-preview">No chart data available</div>'; return; }
+    const highs=bars.map(c=>c.high), lows=bars.map(c=>c.low);
+    const minimum=Math.min(...lows), maximum=Math.max(...highs), range=Math.max(maximum-minimum, 0.01);
+    const width=320, height=104, pad=8, usable=height-pad*2, step=(width-pad*2)/bars.length;
+    const y=value=>pad+(maximum-value)/range*usable;
+    const candlesSvg=bars.map((c,index)=>{
+        const x=pad+index*step+step/2, color=c.close>=c.open?'#36e879':'#ff6161';
+        const bodyTop=y(Math.max(c.open,c.close)), bodyBottom=y(Math.min(c.open,c.close));
+        return `<line x1="${x}" y1="${y(c.high)}" x2="${x}" y2="${y(c.low)}" stroke="${color}" stroke-width="1"/><rect x="${x-step*.30}" y="${bodyTop}" width="${Math.max(1,step*.6)}" height="${Math.max(1,bodyBottom-bodyTop)}" fill="${color}"/>`;
+    }).join('');
+    target.innerHTML=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${trend} candlestick chart"><line x1="${pad}" y1="${y(bars[bars.length-1].close)}" x2="${width-pad}" y2="${y(bars[bars.length-1].close)}" stroke="${trend==='Bullish'?'#36e879':'#ff6161'}" stroke-dasharray="3 3" opacity=".55"/>${candlesSvg}<text x="${pad}" y="13" class="preview-label">${multiTimeframe.toUpperCase()} • ${trend}</text><text x="${width-52}" y="13" class="preview-price">${bars[bars.length-1].close.toFixed(2)}</text></svg>`;
 }
-function loadMultiTimeframe(symbol, chartCandles=latestCandles){
+async function loadMultiTimeframe(symbol, chartCandles=latestCandles){
     document.getElementById('multiTitle').innerText=`Multi-Timeframe Analysis - ${symbol}`;
     try{
-        const candles=candlesForMultiTimeframe(chartCandles);
+        const response=await fetch(`/api/chart/${encodeURIComponent(symbol)}/${multiTimeframe}`);
+        const payload=await response.json();
+        const candles=Array.isArray(payload) ? payload : payload.candles;
+        if(!response.ok || !candles || !candles.length) throw new Error('No data');
         const info=getMultiSummary(candles); if(!info) throw new Error('No data');
         const trend=info.bullish?'Bullish':'Bearish';
         const trendNode=document.getElementById('multiTrend'); trendNode.innerText=trend; trendNode.className=info.bullish?'positive':'negative';
         document.getElementById('multiStrength').innerText=Math.abs(info.change)>=5?'Strong':'Moderate';
         const structure=document.getElementById('multiStructure'); structure.innerText=info.bullish?'Higher Highs':'Lower Lows'; structure.className=info.bullish?'positive':'negative';
+        const zones=Array.isArray(payload) ? [] : (payload.zones || []);
+        const timeframeList=(type)=>[...new Set(zones.filter(zone=>zone.type===type && zone.higher_timeframe_confirmed).map(zone=>zone.higher_timeframe))];
+        const support=timeframeList('demand'), resistance=timeframeList('supply');
+        const supportNode=document.getElementById('multiSupport'), resistanceNode=document.getElementById('multiResistance');
+        supportNode.innerText=support.join(' + ') || '—'; supportNode.className=support.length?'positive':'';
+        resistanceNode.innerText=resistance.join(' + ') || '—'; resistanceNode.className=resistance.length?'negative':'';
         const overall=document.getElementById('multiOverall'); overall.innerText=info.bullish?'BUY':'WAIT'; overall.className=info.bullish?'buy-tag':'negative';
         updateStockTrend(symbol, info);
-        document.getElementById('multiPreview').innerHTML=`${trend}<br><span>${info.low.toFixed(0)} — ${info.high.toFixed(0)}</span>`;
+        renderMultiChart(candles, trend);
     }catch(error){
-        ['multiTrend','multiStrength','multiStructure','multiOverall'].forEach(id=>document.getElementById(id).innerText='—');
-        document.getElementById('multiPreview').innerHTML='Unable to load<br><span>Try again shortly</span>';
+        ['multiTrend','multiStrength','multiStructure','multiSupport','multiResistance','multiOverall'].forEach(id=>document.getElementById(id).innerText='—');
+        document.getElementById('multiPreview').innerHTML='<div class="empty-preview">Unable to load chart<br>Try again shortly</div>';
     }
 }
 
@@ -428,6 +574,8 @@ document.querySelectorAll(".tf[data-period]").forEach(btn=>{
         btn.classList.add("active");
 
         currentTF = btn.dataset.period;
+        document.getElementById("intradayTimeframe").value = "";
+        showChartAction(`Chart: ${btn.innerText}`);
 
         if(currentSymbol!=""){
             loadChart(currentSymbol);
@@ -436,6 +584,15 @@ document.querySelectorAll(".tf[data-period]").forEach(btn=>{
     };
 
 });
+
+document.getElementById("intradayTimeframe").onchange=(event)=>{
+    const selected = event.target.value;
+    if(!selected) return;
+    document.querySelectorAll(".tf[data-period]").forEach(button=>button.classList.remove("active"));
+    currentTF = selected;
+    showChartAction(`Chart: ${event.target.options[event.target.selectedIndex].text}`);
+    if(currentSymbol !== "") loadChart(currentSymbol);
+};
 
 document.querySelectorAll('.tf[data-multi-tf]').forEach(btn=>btn.onclick=()=>{
     document.querySelectorAll('.tf[data-multi-tf]').forEach(item=>item.classList.remove('active'));
@@ -451,6 +608,138 @@ function runSearch(){
 document.getElementById('search').addEventListener('keydown',event=>{ if(event.key==='Enter') runSearch(); });
 document.getElementById('searchButton').onclick=runSearch;
 document.getElementById('searchButton').onkeydown=event=>{ if(event.key==='Enter' || event.key===' ') runSearch(); };
+// Final dashboard arrangement: three market cards plus the recent-alert card.
+async function loadMarketOverview(){
+    const draw=(markets)=>{
+        const cards=markets.map(market=>{
+            const available=market.price!==null;
+            const direction=available && market.change>=0 ? 'positive' : 'negative';
+            const change=available ? (market.live===false ? 'Last available' : `${market.change>=0?'+':''}${market.change} (${market.percent>=0?'+':''}${market.percent}%)`) : 'Unavailable';
+            return `<div class="market-card"><small>${market.name}</small><strong>${available ? market.price.toLocaleString('en-IN') : '-'}</strong><span class="${direction}">${change}</span></div>`;
+        }).join('');
+        document.getElementById('marketCards').innerHTML=cards+`<div class="market-card market-alert"><small>Recent Alerts</small><strong id="topRecentAlert">No premium alerts</strong><span id="topAlertStatus">Scanner ready</span></div>`;
+    };
+    try{
+        const response=await fetch('/api/market-overview');
+        const payload=await response.json();
+        draw(payload.markets || []);
+    }catch(error){
+        draw([
+            {name:'NIFTY 50',price:23996.25,change:0,percent:0,live:false},
+            {name:'BANK NIFTY',price:49245.15,change:0,percent:0,live:false},
+            {name:'SENSEX',price:75122.84,change:0,percent:0,live:false}
+        ]);
+    }
+}
+function updateDashboard(results, scanned=0){
+    document.getElementById('summaryScanned').innerText=scanned;
+    document.getElementById('summarySupply').innerText=results.filter(item=>item.zone_type==='Supply').length;
+    document.getElementById('summaryDemand').innerText=results.filter(item=>item.zone_type==='Demand').length;
+    document.getElementById('summaryPremium').innerText=results.filter(item=>item.score>=90).length;
+    document.getElementById('dashboardZoneRows').innerHTML=results.slice(0,8).map(item=>`<tr><td>${item.symbol}</td><td>${item.timeframe}</td><td class="${item.zone_type.toLowerCase()}">${item.zone_type}</td><td>${item.entry}</td><td class="score">${item.score}</td></tr>`).join('') || '<tr><td colspan="5">No matching quality zones yet.</td></tr>';
+    const premium=results.find(item=>item.score>=90);
+    const alert=document.getElementById('topRecentAlert'), status=document.getElementById('topAlertStatus');
+    if(alert && status && premium){
+        alert.innerText=`${premium.symbol}: ${premium.zone_type} ${premium.score}/100`;
+        status.innerText='Institutional zone found';
+    }
+}
+// Every important box can enter full screen and return with the same corner button.
+['scannerPanel','multiPanel','topZonesPanel','stockTrendPanel'].forEach(id=>{
+    const panel=document.getElementById(id); panel.classList.add('panel-is-fullscreen');
+    const button=document.createElement('button'); button.className='panel-fullscreen'; button.type='button'; button.title='Full screen / restore'; button.innerText='[ ]';
+    button.onclick=async()=>{ if(document.fullscreenElement===panel){ await document.exitFullscreen(); } else { await panel.requestFullscreen(); } };
+    panel.appendChild(button);
+});
+const mainChartPanel=document.querySelector('.chart-box');
+mainChartPanel.classList.add('panel-is-fullscreen');
+const chartFullButton=document.createElement('button'); chartFullButton.className='panel-fullscreen'; chartFullButton.type='button'; chartFullButton.title='Full screen / restore'; chartFullButton.innerText='[ ]';
+chartFullButton.onclick=async()=>{ if(document.fullscreenElement===mainChartPanel){ await document.exitFullscreen(); } else { await mainChartPanel.requestFullscreen(); } };
+mainChartPanel.appendChild(chartFullButton);
+let fundamentalPoller=null;
+function renderFundamentalRows(results){
+    const rows=document.getElementById('fundamentalRows');
+    if(!results.length){ rows.innerHTML='<tr><td colspan="7">No stocks passed the available quality-ratio checks yet.</td></tr>'; return; }
+    const percent=value=>value===null || value===undefined ? 'N/A' : `${(value*100).toFixed(1)}%`;
+    rows.innerHTML=results.slice(0,100).map(item=>`<tr><td><button class="scan-symbol" data-symbol="${item.symbol}">${item.symbol}</button></td><td>${item.company}</td><td class="fundamental-score">${item.score}/100</td><td>${item.passed}/${item.available}</td><td>${percent(item.opm)}</td><td>${percent(item.roe)}</td><td>${item.debt_equity===null || item.debt_equity===undefined ? 'N/A' : item.debt_equity.toFixed(2)}</td></tr>`).join('');
+    rows.querySelectorAll('.scan-symbol').forEach(button=>button.onclick=()=>{ closeFundamentalScan(); loadChart(button.dataset.symbol); });
+}
+async function pollFundamentalScan(jobId){
+    const response=await fetch(`/api/fundamental-scanner/${jobId}`);
+    const job=await response.json();
+    if(job.error){ document.getElementById('fundamentalStatus').innerText=job.error; clearInterval(fundamentalPoller); return; }
+    document.getElementById('fundamentalStatus').innerText=`Scanning ${job.completed}/${job.total} - ${job.results.length} quality stocks found`;
+    renderFundamentalRows(job.results);
+    if(job.status==='complete'){
+        document.getElementById('fundamentalStatus').innerText=`Completed: ${job.results.length} stocks matched (${job.unavailable} unavailable)`;
+        document.getElementById('runFundamentalScan').disabled=false;
+        clearInterval(fundamentalPoller);
+    }
+}
+async function startFundamentalScan(){
+    const button=document.getElementById('runFundamentalScan');
+    if(button.disabled) return;
+    button.disabled=true;
+    const universe=document.getElementById('fundamentalUniverse');
+    document.getElementById('fundamentalStatus').innerText=`Starting ${universe.options[universe.selectedIndex].text} fundamental scan...`;
+    try{
+        const criteria=Object.fromEntries([...document.querySelectorAll('[data-criteria]')].map(select=>[select.dataset.criteria,select.value]));
+        const response=await fetch('/api/fundamental-scanner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({universe:universe.value,criteria})});
+        const data=await response.json();
+        if(!response.ok || data.error) throw new Error(data.error || 'Could not start scan');
+        clearInterval(fundamentalPoller); await pollFundamentalScan(data.job_id);
+        fundamentalPoller=setInterval(()=>pollFundamentalScan(data.job_id),2000);
+    }catch(error){ document.getElementById('fundamentalStatus').innerText=error.message; button.disabled=false; }
+}
+document.getElementById('runFundamentalScan').onclick=startFundamentalScan;
+const defaultCriteria={opm:'.20',eps:'stable',debt_equity:'1',roe:'.15',roce:'.15',interest_multiple:'2',promoter:'stable',cash_flow:'positive',balance_sheet:'increasing',ten_year_growth:'.10'};
+document.getElementById('resetFundamentalDefaults').onclick=()=>{
+    Object.entries(defaultCriteria).forEach(([name,value])=>{ const select=document.querySelector(`[data-criteria="${name}"]`); if(select) select.value=value; });
+    document.getElementById('fundamentalStatus').innerText='Default quality ratios restored.';
+};
+function openFundamentalScan(){
+    document.getElementById('fundamentalCompany').innerText=currentSymbol ? `${currentSymbol} - Fundamental Quality Requirements` : 'Select a stock from search or scanner';
+    document.querySelector('.workspace').classList.add('fundamental-open');
+    startFundamentalScan();
+}
+function closeFundamentalScan(){ document.querySelector('.workspace').classList.remove('fundamental-open'); }
+document.getElementById('fundamentalButton').onclick=openFundamentalScan;
+document.getElementById('closeFundamental').onclick=closeFundamentalScan;
+const navigation=document.querySelector('.nav-menu');
+navigation.insertBefore(document.getElementById('fundamentalButton'), navigation.children[1]);
+document.querySelector('.workspace').appendChild(document.getElementById('stockTrendPanel'));
+document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(button=>{
+    const originalClick=button.onclick;
+    button.onclick=()=>{ closeFundamentalScan(); originalClick(); };
+});
+let activeFeature=null;
+function restoreFeaturePage(){
+    if(activeFeature){ activeFeature.parent.insertBefore(activeFeature.element,activeFeature.placeholder); activeFeature.placeholder.remove(); activeFeature=null; }
+    document.querySelector('.workspace').classList.remove('feature-open');
+    setTimeout(()=>{ chart.applyOptions({width:document.getElementById('chart').clientWidth,height:document.getElementById('chart').clientHeight}); chart.timeScale().fitContent(); },60);
+}
+function openFeaturePage(targetId,title){
+    restoreFeaturePage();
+    const element=document.getElementById(targetId); if(!element) return;
+    const placeholder=document.createComment(`feature-${targetId}`);
+    element.parentNode.insertBefore(placeholder,element);
+    activeFeature={element,parent:placeholder.parentNode,placeholder};
+    document.getElementById('featureTitle').innerText=title;
+    document.getElementById('featureContent').appendChild(element);
+    document.querySelector('.workspace').classList.add('feature-open');
+    setTimeout(()=>{ if(targetId==='chartArea'){ chart.applyOptions({width:document.getElementById('chart').clientWidth,height:document.getElementById('chart').clientHeight}); chart.timeScale().fitContent(); } },80);
+}
+document.getElementById('closeFeature').onclick=restoreFeaturePage;
+document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(button=>{
+    const target=button.dataset.target;
+    button.onclick=()=>{
+        closeFundamentalScan();
+        if(target==='dashboard'){ restoreFeaturePage(); document.getElementById('dashboard').scrollIntoView({behavior:'smooth'}); return; }
+        const label=button.textContent.replace(/[^A-Za-z &-]/g,'').trim();
+        const resolvedTarget=label.includes('Multi-Timeframe') ? 'multiPanel' : target;
+        openFeaturePage(resolvedTarget,label || 'Project SM');
+    };
+});
 loadChart("RELIANCE");
 chart.timeScale().subscribeVisibleTimeRangeChange(renderZones);
 window.addEventListener("resize",()=>{chart.applyOptions({width:document.getElementById("chart").clientWidth,height:document.getElementById("chart").clientHeight});renderZones();});

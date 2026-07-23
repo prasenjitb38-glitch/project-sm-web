@@ -1,27 +1,28 @@
-"""Supply and demand zone detection based on Rally/Base/Drop structures."""
+"""Institutional-style supply and demand zone detection for Project SM.
+
+The engine is deliberately rule-based: its score explains *why* a zone was
+selected. It is a scanner aid, not investment advice.
+"""
 
 import pandas as pd
 
 
 TIMEFRAME_RULES = {
-    "1d": None,
-    "1wk": "W-FRI",
-    "1mo": "ME",
-    "3mo": "QE",
-    "6mo": "2QE",
-    "1y": "YE",
-    "5y": "5YE",
+    "1d": None, "1wk": "W-FRI", "1mo": "ME", "3mo": "QE",
+    "6mo": "2QE", "1y": "YE", "5y": "5YE",
 }
-
-# Used only for quality confirmation; detected zones keep their own timeframe.
 HIGHER_TIMEFRAME = {
     "1d": "1wk", "1wk": "1mo", "1mo": "3mo", "3mo": "6mo",
     "6mo": "1y", "1y": "5y", "5y": None,
 }
+TIMEFRAME_LABELS = {
+    "1d": "Dly", "1wk": "Wly", "1mo": "Mly", "3mo": "Qly",
+    "6mo": "Hly", "1y": "Yrly", "5y": "5Yr",
+}
 
 
 def for_timeframe(df, timeframe):
-    """Convert daily OHLC data to the requested chart timeframe."""
+    """Convert daily OHLCV candles to a Project SM timeframe."""
     rule = TIMEFRAME_RULES.get(timeframe)
     if not rule:
         return df.copy()
@@ -32,165 +33,202 @@ def for_timeframe(df, timeframe):
 
 
 def _timestamp(value):
-    return int(pd.Timestamp(value).tz_localize(None).timestamp())
+    stamp = pd.Timestamp(value)
+    if stamp.tzinfo is not None:
+        stamp = stamp.tz_localize(None)
+    return int(stamp.timestamp())
+
+
+def _indicators(frame):
+    work = frame.copy()
+    work["range"] = work["High"] - work["Low"]
+    previous_close = work["Close"].shift(1)
+    true_range = pd.concat([
+        work["range"], (work["High"] - previous_close).abs(),
+        (work["Low"] - previous_close).abs(),
+    ], axis=1).max(axis=1)
+    work["atr"] = true_range.rolling(14, min_periods=8).mean()
+    work["ema20"] = work["Close"].ewm(span=20, adjust=False).mean()
+    work["ema50"] = work["Close"].ewm(span=50, adjust=False).mean()
+    work["ema200"] = work["Close"].ewm(span=200, adjust=False).mean()
+    change = work["Close"].diff()
+    gain = change.clip(lower=0).rolling(14, min_periods=8).mean()
+    loss = (-change.clip(upper=0)).rolling(14, min_periods=8).mean()
+    rs = gain / loss.replace(0, pd.NA)
+    work["rsi"] = 100 - (100 / (1 + rs))
+    if "Volume" not in work:
+        work["Volume"] = 0
+    work["volume_average"] = work["Volume"].replace(0, pd.NA).rolling(20, min_periods=5).mean()
+    return work
+
+
+def _direction(candles):
+    """Classify the pre-base leg as Rally or Drop."""
+    return "R" if float(candles["Close"].iloc[-1] - candles["Open"].iloc[0]) >= 0 else "D"
 
 
 def _pattern_name(prior, base_size, departure):
-    names = {"R": "Rally", "D": "Drop"}
-    return " -> ".join([names[prior]] + ["Base"] * base_size + [names[departure]])
+    words = {"R": "Rally", "D": "Drop"}
+    return " -> ".join([words[prior]] + ["Base"] * base_size + [words[departure]])
 
 
 def _higher_timeframe_confirmation(source, timeframe, timestamp, zone_type):
-    """Confirm that the broader timeframe moves in the zone's direction."""
-    higher_timeframe = HIGHER_TIMEFRAME.get(timeframe)
-    if not higher_timeframe:
-        return False, None
-    higher = for_timeframe(source, higher_timeframe)
-    recent = higher.loc[:timestamp].tail(3)
-    if len(recent) < 3:
-        return False, higher_timeframe
-    movement = float(recent["Close"].iloc[-1] - recent["Open"].iloc[0])
-    return (movement >= 0 if zone_type == "demand" else movement <= 0), higher_timeframe
+    """Return every aligned broader timeframe, e.g. ``Wly + Mly + Hly``."""
+    candidates = []
+    next_timeframe = HIGHER_TIMEFRAME.get(timeframe)
+    while next_timeframe:
+        candidates.append(next_timeframe)
+        next_timeframe = HIGHER_TIMEFRAME.get(next_timeframe)
+    confirmations = []
+    for higher_name in candidates:
+        higher = _indicators(for_timeframe(source, higher_name))
+        recent = higher.loc[:timestamp].tail(3)
+        if len(recent) < 3:
+            continue
+        close_now = float(recent["Close"].iloc[-1])
+        close_then = float(recent["Close"].iloc[0])
+        aligned = close_now >= close_then if zone_type == "demand" else close_now <= close_then
+        if aligned:
+            confirmations.append(TIMEFRAME_LABELS[higher_name])
+    return bool(confirmations), " + ".join(confirmations) if confirmations else "No HTF support"
+
+
+def _grade(score):
+    if score >= 90:
+        return "Institutional Strong Zone", "★★★★★"
+    if score >= 75:
+        return "Strong Zone", "★★★★☆"
+    if score >= 60:
+        return "Medium Zone", "★★★☆☆"
+    return "Weak Zone", "★★☆☆☆"
 
 
 def detect_zones(df, timeframe="1d", max_zones=4):
-    """Find strong RBR/DBR demand and DBD/RBD supply zones.
+    """Find RBR/DBR demand and DBD/RBD supply zones using the agreed rules.
 
-    A base is one to three compact candles. A zone is strong only when its next
-    three candles create a large ATR-confirmed departure. A later touch marks the
-    zone tested; a break through the distal line excludes it completely.
+    Requirements: 2–6 compact base candles, 3× ATR departure, high-volume
+    breakout, untested zone, fair-value-gap style imbalance, trend/RSI/EMA
+    confirmation and higher-timeframe support or resistance.
     """
-    source = df.copy()
-    work = for_timeframe(source, timeframe).copy()
-    if len(work) < 18:
+    source = df.copy().sort_index()
+    work = _indicators(for_timeframe(source, timeframe))
+    if len(work) < 35:
         return []
-
-    work["range"] = work["High"] - work["Low"]
-    work["atr"] = work["range"].rolling(14, min_periods=6).mean()
     zones = []
 
-    for start in range(6, len(work) - 4):
-        atr = float(work["atr"].iloc[start] or 0)
-        if atr <= 0:
+    for start in range(8, len(work) - 4):
+        atr = work["atr"].iloc[start]
+        if pd.isna(atr) or float(atr) <= 0:
             continue
+        atr = float(atr)
+        prior_candles = work.iloc[start - 4:start]
 
-        for base_size in range(1, 4):
+        for base_size in range(2, 7):
             end = start + base_size - 1
             if end + 3 >= len(work):
                 continue
             base = work.iloc[start:end + 1]
-            base_high, base_low = float(base["High"].max()), float(base["Low"].min())
-            base_range = base_high - base_low
-            if base_range > atr * 1.35 or float(base["range"].max()) > atr * 0.95:
-                continue
-
-            before = work.iloc[start - 3:start]
             after = work.iloc[end + 1:end + 4]
             later = work.iloc[end + 4:]
-            prior_move = float(before["Close"].iloc[-1] - before["Open"].iloc[0])
-            up_departure = float(after["High"].max() - base_high)
-            down_departure = float(base_low - after["Low"].min())
-            minimum_departure = max(atr * 1.15, base_range * 1.4)
-            previous_high = float(before["High"].max())
-            previous_low = float(before["Low"].min())
-            average_volume = 0.0
-            departure_volume = 0.0
-            if "Volume" in work.columns:
-                volume_window = work["Volume"].iloc[max(0, start - 14):start]
-                volume_mean = volume_window.replace(0, pd.NA).mean()
-                departure_mean = after["Volume"].mean()
-                average_volume = float(volume_mean) if pd.notna(volume_mean) else 0.0
-                departure_volume = float(departure_mean) if pd.notna(departure_mean) else 0.0
-            volume_ratio = departure_volume / average_volume if average_volume > 0 else 1.0
+            base_high, base_low = float(base["High"].max()), float(base["Low"].min())
+            base_width = base_high - base_low
 
-            zone = None
-            if up_departure >= minimum_departure and float(after["High"].max()) > previous_high:
-                prior = "R" if prior_move >= atr * 0.25 else "D"
-                pattern = f"{prior}{'B' * base_size}R"
-                # A valid demand zone must not be broken below its distal line.
-                if not later.empty and float(later["Low"].min()) < base_low:
-                    continue
-                tested = not later.empty and float(later["Low"].min()) <= base_high
-                zone = {
-                    "pattern": pattern, "pattern_name": _pattern_name(prior, base_size, "R"),
-                    "type": "demand", "time": _timestamp(base.index[0]),
-                    "top": round(base_high, 2), "bottom": round(base_low, 2),
-                    "entry_low": round(base_low, 2), "entry_high": round(base_high, 2),
-                    "exit": round(float(after["High"].max()), 2), "tested": tested,
-                }
-            elif down_departure >= minimum_departure and float(after["Low"].min()) < previous_low:
-                prior = "D" if prior_move <= -atr * 0.25 else "R"
-                pattern = f"{prior}{'B' * base_size}D"
-                # A valid supply zone must not be broken above its distal line.
-                if not later.empty and float(later["High"].max()) > base_high:
-                    continue
-                tested = not later.empty and float(later["High"].max()) >= base_low
-                zone = {
-                    "pattern": pattern, "pattern_name": _pattern_name(prior, base_size, "D"),
-                    "type": "supply", "time": _timestamp(base.index[0]),
-                    "top": round(base_high, 2), "bottom": round(base_low, 2),
-                    "entry_low": round(base_low, 2), "entry_high": round(base_high, 2),
-                    "exit": round(float(after["Low"].min()), 2), "tested": tested,
-                }
+            # A valid base is compact compared with its recent ATR.
+            if base_width > atr * 1.6 or float(base["range"].max()) > atr * 1.05:
+                continue
 
-            if zone:
-                impulse = up_departure if zone["type"] == "demand" else down_departure
-                risk = base_range
-                reward = (
-                    float(zone["exit"]) - base_high
-                    if zone["type"] == "demand"
-                    else base_low - float(zone["exit"])
-                )
-                risk_reward = reward / risk if risk > 0 else 0.0
+            prior = _direction(prior_candles)
+            previous_high, previous_low = float(prior_candles["High"].max()), float(prior_candles["Low"].min())
+            up_move = float(after["High"].max() - base_high)
+            down_move = float(base_low - after["Low"].min())
+            departure_volume = float(after["Volume"].mean() or 0)
+            base_volume = work["volume_average"].iloc[start]
+            volume_ratio = departure_volume / float(base_volume) if pd.notna(base_volume) and float(base_volume) > 0 else 1.0
 
-                # Project SM 100-point scoring system:
-                # Pattern 20, Fresh 20, Departure 15, BOS 15, Volume 10,
-                # Higher timeframe 10, ATR width 5 and Risk:Reward 5.
-                width_ratio = base_range / atr
-                departure_score = min(15, max(0, (impulse / atr - 1.15) / 0.85 * 15))
-                width_score = min(5, max(0, (1.35 - width_ratio) / 0.85 * 5))
-                volume_score = min(10, max(0, (volume_ratio - 1.0) / 0.5 * 10))
-                freshness_score = 20 if not zone["tested"] else 0
-                htf_confirmed, higher_timeframe = _higher_timeframe_confirmation(
-                    source, timeframe, base.index[-1], zone["type"]
-                )
-                htf_score = 10 if htf_confirmed else 0
-                rr_score = 5 if risk_reward >= 2 else 0
-                zone["fresh"] = not zone["tested"]
-                zone["swing_break"] = True
-                zone["volume_ratio"] = round(volume_ratio, 2)
-                zone["higher_timeframe"] = (higher_timeframe or "N/A").upper()
-                zone["higher_timeframe_confirmed"] = htf_confirmed
-                zone["trend_aligned"] = htf_confirmed
-                zone["risk_reward"] = round(risk_reward, 2)
-                zone["rr_ok"] = risk_reward >= 2
-                zone["score"] = min(100, round(
-                    20 + freshness_score + departure_score + 15 + volume_score
-                    + htf_score + width_score + rr_score
-                ))
-                if zone["score"] >= 90:
-                    zone["grade"] = "Premium Zone"
-                    zone["stars"] = "★★★★★"
-                elif zone["score"] >= 80:
-                    zone["grade"] = "Strong Zone"
-                    zone["stars"] = "★★★★"
-                elif zone["score"] >= 70:
-                    zone["grade"] = "Good Zone"
-                    zone["stars"] = "★★★"
-                else:
-                    zone["grade"] = "Below Filter"
-                    zone["stars"] = ""
-                zone["timeframe"] = timeframe.upper()
-                zones.append(zone)
+            zone_type = None
+            impulse = 0.0
+            fvg = False
+            bos = False
+            fresh = False
+            liquidity_sweep = False
 
-    # Prefer recent, non-overlapping zones of each kind.
+            # Demand: RBR or DBR with at least 3 ATR upward departure.
+            if up_move >= atr * 3 and float(after["Close"].iloc[-1]) > base_high:
+                zone_type, impulse = "demand", up_move
+                bos = float(after["High"].max()) > previous_high
+                # Bullish FVG / imbalance: third candle low stays above first candle high.
+                fvg = float(after["Low"].iloc[-1]) > float(after["High"].iloc[0])
+                fresh = later.empty or float(later["Low"].min()) > base_high
+                liquidity_sweep = float(prior_candles["Low"].min()) < float(work["Low"].iloc[start - 5:start].min())
+
+            # Supply: DBD or RBD with at least 3 ATR downward departure.
+            elif down_move >= atr * 3 and float(after["Close"].iloc[-1]) < base_low:
+                zone_type, impulse = "supply", down_move
+                bos = float(after["Low"].min()) < previous_low
+                # Bearish FVG / imbalance: third candle high stays below first candle low.
+                fvg = float(after["High"].iloc[-1]) < float(after["Low"].iloc[0])
+                fresh = later.empty or float(later["High"].max()) < base_low
+                liquidity_sweep = float(prior_candles["High"].max()) > float(work["High"].iloc[start - 5:start].max())
+
+            if not zone_type:
+                continue
+
+            last_base = base.iloc[-1]
+            rsi = last_base["rsi"]
+            rsi_ok = False
+            if pd.notna(rsi) and 40 <= float(rsi) <= 60:
+                rsi_change = float(work["rsi"].iloc[end] - work["rsi"].iloc[max(0, end - 2)])
+                rsi_ok = rsi_change >= 0 if zone_type == "demand" else rsi_change <= 0
+            ema20, ema50, ema200 = (float(last_base[key]) for key in ("ema20", "ema50", "ema200"))
+            ema_ok = ema20 > ema50 > ema200 if zone_type == "demand" else ema20 < ema50 < ema200
+            trend_ok = ema_ok and rsi_ok
+            htf_ok, htf_name = _higher_timeframe_confirmation(source, timeframe, base.index[-1], zone_type)
+
+            # Score: Fresh 20, departure 20, volume 15, HTF 15, base 10,
+            # ATR expansion 10, trend 5 and liquidity sweep 5.
+            score = (
+                (20 if fresh else 0)
+                + min(20, round((impulse / atr) / 4 * 20))
+                + (15 if volume_ratio >= 1.5 else 8 if volume_ratio >= 1.15 else 0)
+                + (15 if htf_ok else 0)
+                + (10 if 2 <= base_size <= 4 else 7)
+                + (10 if impulse >= 3 * atr and base_width <= 1.2 * atr else 5)
+                + (5 if trend_ok else 0)
+                + (5 if liquidity_sweep else 0)
+            )
+            # BOS and FVG are compulsory quality confirmations, rather than
+            # hidden score points. This stops a score from hiding weak structure.
+            if not (bos and fvg):
+                score = min(score, 74)
+            score = min(100, int(score))
+            grade, stars = _grade(score)
+            reward = float(after["High"].max()) - base_high if zone_type == "demand" else base_low - float(after["Low"].min())
+            risk_reward = reward / base_width if base_width else 0
+
+            zones.append({
+                "pattern": f"{prior}{'B' * base_size}{'R' if zone_type == 'demand' else 'D'}",
+                "pattern_name": _pattern_name(prior, base_size, "R" if zone_type == "demand" else "D"),
+                "type": zone_type, "time": _timestamp(base.index[0]),
+                "top": round(base_high, 2), "bottom": round(base_low, 2),
+                "entry_low": round(base_low, 2), "entry_high": round(base_high, 2),
+                "exit": round(float(after["High"].max() if zone_type == "demand" else after["Low"].min()), 2),
+                "fresh": fresh, "tested": not fresh, "score": score,
+                "grade": grade, "stars": stars, "timeframe": timeframe.upper(),
+                "base_candles": base_size, "departure_atr": round(impulse / atr, 2),
+                "volume_ratio": round(volume_ratio, 2), "fvg": fvg, "bos": bos,
+                "liquidity_sweep": liquidity_sweep, "trend_aligned": trend_ok,
+                "rsi_confirmation": rsi_ok, "ema_confirmation": ema_ok,
+                "higher_timeframe": htf_name, "higher_timeframe_confirmed": htf_ok,
+                "risk_reward": round(risk_reward, 2),
+            })
+
+    # Keep newest non-overlapping zones. Fresh higher-score candidates win.
     selected = []
-    for zone in sorted(zones, key=lambda item: item["time"], reverse=True):
+    for zone in sorted(zones, key=lambda item: (item["fresh"], item["score"], item["time"]), reverse=True):
         overlap = any(
-            zone["type"] == existing["type"]
-            and zone["bottom"] <= existing["top"]
-            and zone["top"] >= existing["bottom"]
-            for existing in selected
+            zone["type"] == current["type"]
+            and zone["bottom"] <= current["top"] and zone["top"] >= current["bottom"]
+            for current in selected
         )
         if not overlap:
             selected.append(zone)

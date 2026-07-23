@@ -18,6 +18,7 @@ from datetime import date, timedelta
 PROJECT_ROOT = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=PROJECT_ROOT / "templates", static_folder=PROJECT_ROOT / "static")
 SCANNER_JOBS = {}
+FUNDAMENTAL_JOBS = {}
 SCANNER_LOCK = Lock()
 # A later NIFTY 50/100/200 scan must not sit behind a long NIFTY 500 job.
 SCANNER_EXECUTOR = ThreadPoolExecutor(max_workers=2)
@@ -92,6 +93,37 @@ def get_symbol_history(symbol):
         return pd.DataFrame()
 
 
+def get_chart_history(symbol, timeframe):
+    """Return the candle interval chosen on the main chart toolbar."""
+    intraday = {
+        "5m": ("5m", "60d", None),
+        "15m": ("15m", "60d", None),
+        "1h": ("60m", "730d", None),
+        "4h": ("60m", "730d", "4h"),
+        "6h": ("60m", "730d", "6h"),
+        "12h": ("60m", "730d", "12h"),
+    }
+    config = intraday.get(timeframe)
+    if not config:
+        return get_symbol_history(symbol)
+
+    interval, lookback, rule = config
+    try:
+        history = yf.Ticker(f"{symbol.upper()}.NS").history(
+            period=lookback, interval=interval, auto_adjust=False
+        )
+        if history.empty:
+            return history
+        if rule:
+            history = history.resample(rule).agg({
+                "Open": "first", "High": "max", "Low": "min",
+                "Close": "last", "Volume": "sum",
+            }).dropna()
+        return history
+    except Exception:
+        return pd.DataFrame()
+
+
 def load_index_universe(index_key):
     """Load a cached index list, or download the latest official constituent list."""
     label, filename, url = INDEX_UNIVERSES[index_key]
@@ -123,6 +155,136 @@ def load_index_universe(index_key):
     result = pd.DataFrame({"Symbol": stocks[symbol_column]})
     result["Company"] = stocks[company_column] if company_column else result["Symbol"]
     return label, result.dropna(subset=["Symbol"]).drop_duplicates(subset=["Symbol"])
+
+
+def _ratio(value, percentage=False):
+    """Normalise Yahoo values that can arrive as decimals or percentages."""
+    if value is None or pd.isna(value):
+        return None
+    try:
+        value = float(value)
+        return value / 100 if percentage and value > 1 else value
+    except (TypeError, ValueError):
+        return None
+
+
+def get_fundamental_scan(symbol, company, criteria=None):
+    """Evaluate the user's quality-ratio checklist from available public data."""
+    criteria = criteria or {}
+    def threshold(name, fallback):
+        try:
+            return float(criteria.get(name, fallback))
+        except (TypeError, ValueError):
+            return fallback
+    opm_min = threshold("opm", .20)
+    debt_equity_max = threshold("debt_equity", 1)
+    roe_min = threshold("roe", .15)
+    roce_min = threshold("roce", .15)
+    interest_multiple = threshold("interest_multiple", 2)
+    info = yf.Ticker(f"{symbol}.NS").get_info()
+    opm = _ratio(info.get("operatingMargins"))
+    roe = _ratio(info.get("returnOnEquity"))
+    debt_equity = _ratio(info.get("debtToEquity"), percentage=True)
+    trailing_eps, forward_eps = _ratio(info.get("trailingEps")), _ratio(info.get("forwardEps"))
+    operating_cashflow = _ratio(info.get("operatingCashflow"))
+
+    # Yahoo does not reliably supply promoter holding or 10-year company
+    # history for every NSE symbol. Those criteria are reported as unavailable,
+    # never invented or counted as a pass.
+    checks = {
+        "OPM": None if opm is None else opm >= opm_min,
+        "EPS Stable": None if trailing_eps is None or forward_eps is None or trailing_eps <= 0 else forward_eps >= trailing_eps * .75,
+        "D/E": None if debt_equity is None else debt_equity < debt_equity_max,
+        "ROE": None if roe is None else roe >= roe_min,
+        "ROCE": None,
+        "Net Profit / Interest": None,
+        "Promoter Holding": None,
+        "Cash Flow": None if operating_cashflow is None else operating_cashflow > 0,
+        "Balance Sheet": None,
+        "10Y Sales & Profit Growth": None,
+    }
+    try:
+        income = yf.Ticker(f"{symbol}.NS").financials
+        balance = yf.Ticker(f"{symbol}.NS").balance_sheet
+        if not income.empty and not balance.empty:
+            def value(frame, names, column=0):
+                row = next((name for name in names if name in frame.index), None)
+                if row is None or frame.shape[1] <= column:
+                    return None
+                return _ratio(frame.loc[row].iloc[column])
+            ebit = value(income, ["EBIT", "Operating Income"])
+            interest = value(income, ["Interest Expense", "Interest Expense Non Operating"])
+            net_income = value(income, ["Net Income", "Net Income Common Stockholders"])
+            assets = value(balance, ["Total Assets"])
+            current_liabilities = value(balance, ["Current Liabilities", "Total Current Liabilities"])
+            equity_now = value(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest"])
+            equity_previous = value(balance, ["Stockholders Equity", "Total Equity Gross Minority Interest"], 1)
+            capital_employed = (assets - current_liabilities) if assets is not None and current_liabilities is not None else None
+            checks["ROCE"] = None if ebit is None or not capital_employed else ebit / capital_employed >= roce_min
+            checks["Net Profit / Interest"] = None if net_income is None or not interest or interest >= 0 else net_income / abs(interest) >= interest_multiple
+            checks["Balance Sheet"] = None if equity_now is None or equity_previous is None else equity_now >= equity_previous
+    except Exception:
+        pass
+
+    available = [passed for passed in checks.values() if passed is not None]
+    passed = sum(available)
+    score = round(passed / len(available) * 100) if available else 0
+    return {
+        "symbol": symbol, "company": company, "score": score,
+        "passed": passed, "available": len(available), "checks": checks,
+        "opm": opm, "roe": roe, "debt_equity": debt_equity,
+    }
+
+
+def run_fundamental_scanner(job_id, symbols, criteria):
+    def scan(row):
+        try:
+            return get_fundamental_scan(row.Symbol.strip().upper(), row.Company, criteria)
+        except Exception:
+            return None
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = [pool.submit(scan, row) for row in symbols.itertuples(index=False)]
+        for future in as_completed(futures):
+            result = future.result()
+            with SCANNER_LOCK:
+                job = FUNDAMENTAL_JOBS[job_id]
+                job["completed"] += 1
+                if result is None:
+                    job["unavailable"] += 1
+                # Require at least six known metrics and an 80% pass score so
+                # an incomplete provider response cannot become a false result.
+                elif result["available"] >= 6 and result["score"] >= 80:
+                    job["results"].append(result)
+    with SCANNER_LOCK:
+        job = FUNDAMENTAL_JOBS[job_id]
+        job["results"].sort(key=lambda row: (row["score"], row["passed"]), reverse=True)
+        job["status"] = "complete"
+
+
+@app.post("/api/fundamental-scanner")
+def start_fundamental_scanner():
+    settings = request.get_json(silent=True) or {}
+    index_key = settings.get("universe", "nifty50")
+    if index_key not in INDEX_UNIVERSES:
+        return jsonify({"error": "Invalid index universe"}), 400
+    try:
+        label, symbols = load_index_universe(index_key)
+    except Exception as error:
+        return jsonify({"error": f"Could not load index list: {error}"}), 503
+    job_id = str(uuid4())
+    with SCANNER_LOCK:
+        FUNDAMENTAL_JOBS[job_id] = {"status": "running", "completed": 0, "total": len(symbols), "unavailable": 0, "results": [], "universe": label}
+    SCANNER_EXECUTOR.submit(run_fundamental_scanner, job_id, symbols, settings.get("criteria", {}))
+    return jsonify({"job_id": job_id})
+
+
+@app.get("/api/fundamental-scanner/<job_id>")
+def fundamental_scanner_status(job_id):
+    with SCANNER_LOCK:
+        job = FUNDAMENTAL_JOBS.get(job_id)
+        if not job:
+            return jsonify({"error": "Fundamental scan job not found"}), 404
+        return jsonify(job)
 
 
 def detect_supply_demand_zones(df, max_zones=4):
@@ -242,10 +404,16 @@ def chart(symbol, period):
 
     try:
         selected_tf = period
-        df = get_symbol_history(symbol)
+        df = get_chart_history(symbol, selected_tf)
 
         if df.empty:
             return jsonify([])
+
+        # A full daily history can contain several thousand candles and make
+        # the 1D chart feel unresponsive.  Keep roughly three market years,
+        # which is enough for analysis while rendering quickly.
+        if selected_tf == "1d" and len(df) > 750:
+            df = df.tail(750).copy()
 
         # -------- Higher Timeframe --------
         if selected_tf != "1d":
@@ -339,7 +507,15 @@ def run_scanner(job_id, timeframe, symbols):
                 "status": "Fresh" if zone["fresh"] else "Tested",
                 "entry": f"₹{zone['entry_low']:,.2f} – ₹{zone['entry_high']:,.2f}",
                 "exit": f"₹{zone['exit']:,.2f}",
-            } for zone in zones if zone["fresh"] and zone["score"] >= 70]
+                "strength": zone["grade"],
+                "base_candles": zone["base_candles"],
+                "departure_atr": zone["departure_atr"],
+                "volume_ratio": zone["volume_ratio"],
+                "bos": zone["bos"],
+                "fvg": zone["fvg"],
+                "liquidity_sweep": zone["liquidity_sweep"],
+                "htf": zone["higher_timeframe"],
+            } for zone in zones if zone["score"] >= 60]
         except Exception:
             return None
 
@@ -393,9 +569,9 @@ def market_overview():
     """Small live market snapshot for the dashboard header."""
     indices = {
         "NIFTY 50": "^NSEI", "BANK NIFTY": "^NSEBANK",
-        "SENSEX": "^BSESN", "NIFTY IT": "^CNXIT",
+        "SENSEX": "^BSESN",
     }
-    nse_names = {"NIFTY 50": "NIFTY 50", "BANK NIFTY": "NIFTY BANK", "NIFTY IT": "NIFTY IT"}
+    nse_names = {"NIFTY 50": "NIFTY 50", "BANK NIFTY": "NIFTY BANK"}
     nse_values = {}
     try:
         for item in nse_json("/api/allIndices").get("data", []):
