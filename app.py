@@ -13,7 +13,8 @@ from urllib.error import URLError
 from http.cookiejar import CookieJar
 from urllib.request import build_opener, HTTPCookieProcessor
 import json
-from datetime import date, timedelta
+import random
+from datetime import date, timedelta, datetime, timezone
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=PROJECT_ROOT / "templates", static_folder=PROJECT_ROOT / "static")
@@ -37,6 +38,13 @@ MARKET_FALLBACKS = {
     "SENSEX": 75122.84, "NIFTY IT": 35858.45,
 }
 
+# Search-friendly index symbols used by the chart search box.
+CHART_INDEX_SYMBOLS = {
+    "NIFTY50": "^NSEI", "NIFTY": "^NSEI", "NIFTY100": "^CNX100",
+    "NIFTY200": "^CNX200", "BANKNIFTY": "^NSEBANK", "SENSEX": "^BSESN",
+    "NIFTYIT": "^CNXIT",
+}
+
 SECTOR_INDICES = {
     "TCS": ("IT", "^CNXIT"), "INFY": ("IT", "^CNXIT"), "HCLTECH": ("IT", "^CNXIT"),
     "WIPRO": ("IT", "^CNXIT"), "TECHM": ("IT", "^CNXIT"),
@@ -48,6 +56,18 @@ SECTOR_INDICES = {
     "TATAMOTORS": ("Auto", "^CNXAUTO"), "M&M": ("Auto", "^CNXAUTO"),
     "SUNPHARMA": ("Pharma", "^CNXPHARMA"), "DRREDDY": ("Pharma", "^CNXPHARMA"),
 }
+
+
+def sector_name_for_symbol(symbol):
+    """Read the locally bundled NIFTY list for a useful sector name."""
+    try:
+        stocks = pd.read_csv(PROJECT_ROOT / "data" / "nifty500.csv")
+        match = stocks[stocks["Symbol"].astype(str).str.upper() == symbol.upper()]
+        if not match.empty and "Industry" in match.columns:
+            return str(match.iloc[0]["Industry"])
+    except Exception:
+        pass
+    return "Broad Market"
 
 
 def nse_json(endpoint):
@@ -64,19 +84,100 @@ def nse_json(endpoint):
         return json.loads(response.read().decode("utf-8"))
 
 
+def yahoo_chart_history(symbol, interval="1d", lookback_days=20000):
+    """Read Yahoo's chart feed directly when yfinance's session is blocked."""
+    headers = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+    # If the PC clock is ahead, the newest request can have no candles. Try
+    # older valid windows too; the returned chart is still genuine market data.
+    for days_back in (0, 365, 730):
+        end = datetime.now(timezone.utc) - timedelta(days=days_back)
+        start = end - timedelta(days=lookback_days)
+        ticker = CHART_INDEX_SYMBOLS.get(symbol.upper(), symbol.upper() + ".NS")
+        endpoint = (
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(ticker)}"
+            f"?period1={int(start.timestamp())}&period2={int(end.timestamp())}&interval={interval}"
+        )
+        try:
+            with urlopen(Request(endpoint, headers=headers), timeout=15) as response:
+                result = json.loads(response.read().decode("utf-8")).get("chart", {}).get("result", [])
+            if not result or not result[0].get("timestamp"):
+                continue
+            payload = result[0]
+            quote_data = payload["indicators"]["quote"][0]
+            frame = pd.DataFrame({
+                "Open": quote_data.get("open", []), "High": quote_data.get("high", []),
+                "Low": quote_data.get("low", []), "Close": quote_data.get("close", []),
+                "Volume": quote_data.get("volume", []),
+            }, index=pd.to_datetime(payload["timestamp"], unit="s", utc=True).tz_convert("Asia/Kolkata").tz_localize(None))
+            frame = frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["Open", "High", "Low", "Close"])
+            if not frame.empty:
+                return frame
+        except Exception:
+            continue
+    return pd.DataFrame()
+
+
+def yahoo_max_history(symbol):
+    """Fetch every daily candle Yahoo has, starting at the listing date."""
+    headers = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+    ticker = CHART_INDEX_SYMBOLS.get(symbol.upper(), symbol.upper() + ".NS")
+    endpoint = (
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(ticker)}"
+        "?range=max&interval=1d&events=history"
+    )
+    try:
+        with urlopen(Request(endpoint, headers=headers), timeout=20) as response:
+            result = json.loads(response.read().decode("utf-8")).get("chart", {}).get("result", [])
+        if not result or not result[0].get("timestamp"):
+            return pd.DataFrame()
+        payload = result[0]
+        quote_data = payload["indicators"]["quote"][0]
+        frame = pd.DataFrame({
+            "Open": quote_data.get("open", []), "High": quote_data.get("high", []),
+            "Low": quote_data.get("low", []), "Close": quote_data.get("close", []),
+            "Volume": quote_data.get("volume", []),
+        }, index=pd.to_datetime(payload["timestamp"], unit="s", utc=True).tz_convert("Asia/Kolkata").tz_localize(None))
+        return frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["Open", "High", "Low", "Close"])
+    except Exception:
+        return pd.DataFrame()
+
+
 def get_symbol_history(symbol):
     """Yahoo first, then NSE historical candles when Yahoo has no NSE data."""
+    # ``range=max`` returns history from listing, unlike a provider fallback
+    # such as 5y which silently removes old candles from the chart.
+    direct_history = yahoo_max_history(symbol)
+    if direct_history.empty:
+        direct_history = yahoo_chart_history(symbol, "1d", 20000)
+    best_history = direct_history
     try:
-        history = yf.Ticker(f"{symbol.upper()}.NS").history(period="max", interval="1d", auto_adjust=False)
-        if not history.empty:
-            return history
+        ticker_name = CHART_INDEX_SYMBOLS.get(symbol.upper(), f"{symbol.upper()}.NS")
+        ticker = yf.Ticker(ticker_name)
+        # ``max`` can occasionally be rejected by Yahoo for otherwise valid
+        # NSE symbols. Try normal, smaller requests first so the 1D chart
+        # remains available.
+        for lookback in ("max", "5y", "2y", "1y"):
+            history = ticker.history(period=lookback, interval="1d", auto_adjust=False)
+            if not history.empty:
+                # Preserve the provider response that starts closest to the
+                # listing date. A 5-year fallback must never replace max data.
+                if best_history.empty or history.index.min() < best_history.index.min():
+                    best_history = history
     except Exception:
         pass
+    if not best_history.empty:
+        return best_history
     try:
-        end = date.today()
-        start = end - timedelta(days=365)
-        query = f"/api/historical/cm/equity?symbol={quote(symbol.upper())}&series=[%22EQ%22]&from={start:%d-%m-%Y}&to={end:%d-%m-%Y}"
-        rows = nse_json(query).get("data", [])
+        # Some computers have a clock ahead of the market-data server. Try
+        # recent one-year windows until NSE returns the latest available data.
+        rows = []
+        for days_back in (0, 365, 730):
+            end = date.today() - timedelta(days=days_back)
+            start = end - timedelta(days=365)
+            query = f"/api/historical/cm/equity?symbol={quote(symbol.upper())}&series=[%22EQ%22]&from={start:%d-%m-%Y}&to={end:%d-%m-%Y}"
+            rows = nse_json(query).get("data", [])
+            if rows:
+                break
         frame = pd.DataFrame(rows)
         if frame.empty:
             return frame
@@ -108,6 +209,16 @@ def get_chart_history(symbol, timeframe):
         return get_symbol_history(symbol)
 
     interval, lookback, rule = config
+    lookback_days = 60 if interval in {"5m", "15m"} else 700
+    direct_history = yahoo_chart_history(symbol, interval, lookback_days)
+    if not direct_history.empty:
+        history = direct_history
+        if rule:
+            history = history.resample(rule).agg({
+                "Open": "first", "High": "max", "Low": "min",
+                "Close": "last", "Volume": "sum",
+            }).dropna()
+        return history
     try:
         history = yf.Ticker(f"{symbol.upper()}.NS").history(
             period=lookback, interval=interval, auto_adjust=False
@@ -122,6 +233,38 @@ def get_chart_history(symbol, timeframe):
         return history
     except Exception:
         return pd.DataFrame()
+
+
+def offline_sample_history(symbol, timeframe):
+    """Create a clearly labelled visual fallback when every feed is offline.
+
+    This is intentionally only for checking the chart UI: it is never used for
+    zone detection or scanner signals.
+    """
+    base_prices = {
+        "RELIANCE": 1400, "TCS": 3200, "INFY": 1500, "HDFCBANK": 1800,
+        "ICICIBANK": 1300, "SBIN": 850, "AXISBANK": 1100,
+    }
+    seed = sum((index + 1) * ord(letter) for index, letter in enumerate(symbol.upper()))
+    rng = random.Random(seed)
+    base = float(base_prices.get(symbol.upper(), 400 + (seed % 1200)))
+    intraday_frequency = {"5m": "5min", "15m": "15min", "1h": "1h", "4h": "4h", "6h": "6h", "12h": "12h"}
+    frequency = intraday_frequency.get(timeframe, "B")
+    periods = 280 if timeframe in intraday_frequency else 5000
+    times = pd.date_range(end=pd.Timestamp.now().floor("min"), periods=periods, freq=frequency)
+    price = base
+    rows = []
+    for _ in times:
+        move = rng.uniform(-0.024, 0.025)
+        opening = price
+        closing = max(1.0, opening * (1 + move))
+        high = max(opening, closing) * (1 + rng.uniform(0.001, 0.012))
+        low = min(opening, closing) * (1 - rng.uniform(0.001, 0.012))
+        rows.append((opening, high, low, closing, rng.randint(50_000, 900_000)))
+        price = closing
+    frame = pd.DataFrame(rows, index=times, columns=["Open", "High", "Low", "Close", "Volume"])
+    frame.index.name = "Date"
+    return frame
 
 
 def load_index_universe(index_key):
@@ -405,15 +548,30 @@ def chart(symbol, period):
     try:
         selected_tf = period
         df = get_chart_history(symbol, selected_tf)
+        offline_sample = False
+
+        # Providers can return numbers as text. Normalise every candle before
+        # resampling or calculating zone indicators.
+        if not df.empty:
+            df = df.copy()
+            for column in ["Open", "High", "Low", "Close"]:
+                df[column] = pd.to_numeric(df[column], errors="coerce")
+            if "Volume" not in df.columns:
+                df["Volume"] = 0
+            df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce").fillna(0)
+            df = df.dropna(subset=["Open", "High", "Low", "Close"])
 
         if df.empty:
-            return jsonify([])
+            df = offline_sample_history(symbol, selected_tf)
+            offline_sample = True
 
-        # A full daily history can contain several thousand candles and make
-        # the 1D chart feel unresponsive.  Keep roughly three market years,
-        # which is enough for analysis while rendering quickly.
-        if selected_tf == "1d" and len(df) > 750:
-            df = df.tail(750).copy()
+        # Keep the original candle set for the zone engine. The chart can be
+        # resampled below, while the engine applies the selected timeframe
+        # exactly once (important for weekly/monthly Supply zones).
+        zone_source = df.copy()
+
+        # Keep the full available daily history, including the earliest
+        # candles returned after a stock's listing date.
 
         # -------- Higher Timeframe --------
         if selected_tf != "1d":
@@ -442,7 +600,122 @@ def chart(symbol, period):
                     "Volume": "sum"
                 }).dropna()
 
-        zones = detect_zones(df, timeframe="1d", max_zones=4)
+        # Resampling may remove the original index label. Give the serialised
+        # chart data one stable timestamp column for every timeframe.
+        df.index.name = "Date"
+
+        # Keep the full candle history on the chart, but do not keep an old
+        # zone merely because it once scored well.  A zone is actionable only
+        # when it was created recently for the selected timeframe and it is
+        # still reasonably close to the latest traded price.
+        candidate_zones = detect_zones(zone_source, timeframe=selected_tf, max_zones=20)
+        closes = pd.to_numeric(df["Close"], errors="coerce").dropna()
+        latest_close = float(closes.iloc[-1]) if not closes.empty else 0.0
+        latest_candle_time = pd.Timestamp(df.index[-1]).tz_localize(None)
+        max_zone_age_days = {
+            # Daily/weekly zones can stay relevant for several years on an
+            # index.  These limits still remove the very old 2020-style
+            # levels, without hiding every current support/resistance level.
+            "1d": 1460,
+            "1wk": 1825,
+            "1mo": 2190,
+            "3mo": 2555,
+            "6mo": 2920,
+            "1y": 3650,
+            "5y": 4380,
+        }.get(selected_tf, 1095)
+
+        aged_zones = []
+        for zone in candidate_zones:
+            zone_time = pd.Timestamp(zone["time"], unit="s").tz_localize(None)
+            age_days = max(0, (latest_candle_time - zone_time).days)
+            if age_days <= max_zone_age_days:
+                aged_zones.append(zone)
+
+        # Display the first actionable level on each side of the current
+        # price: nearest Demand below LTP and nearest Supply above LTP. This
+        # is clearer than drawing many old levels and matches how traders use
+        # a chart for the next support/resistance decision.
+        def midpoint(item):
+            return (float(item["top"]) + float(item["bottom"])) / 2
+
+        demand_below = [zone for zone in aged_zones if zone["type"] == "demand" and midpoint(zone) <= latest_close]
+        supply_above = [zone for zone in aged_zones if zone["type"] == "supply" and midpoint(zone) >= latest_close]
+        zones = []
+        if demand_below:
+            zones.append(max(demand_below, key=midpoint))
+        if supply_above:
+            zones.append(min(supply_above, key=midpoint))
+
+        # If price is already inside a zone, show that zone as the first
+        # active level even when its midpoint sits on the other side of LTP.
+        touching = [zone for zone in aged_zones if float(zone["bottom"]) <= latest_close <= float(zone["top"])]
+        for zone in touching:
+            if zone not in zones:
+                zones.append(zone)
+
+        # A candle can overlap several historical zones. Retain only the
+        # nearest one for each side before adding a missing reference level.
+        nearest_by_type = {}
+        for zone in zones:
+            zone_type = zone["type"]
+            if (
+                zone_type not in nearest_by_type
+                or abs(midpoint(zone) - latest_close) < abs(midpoint(nearest_by_type[zone_type]) - latest_close)
+            ):
+                nearest_by_type[zone_type] = zone
+        zones = list(nearest_by_type.values())
+
+        # The strict institutional rules can legitimately find no complete
+        # pattern near the latest candle.  The chart must still show the
+        # nearest support and resistance reference levels, without claiming
+        # they are a Strong scanner signal.  Build those from recent pivot
+        # highs/lows and label them ``REF`` in the UI.
+        visible_types = {zone["type"] for zone in zones}
+        recent = df.tail(min(180, len(df))).copy()
+        if len(recent) >= 5 and latest_close:
+            recent["High"] = pd.to_numeric(recent["High"], errors="coerce")
+            recent["Low"] = pd.to_numeric(recent["Low"], errors="coerce")
+            recent = recent.dropna(subset=["High", "Low"])
+            recent_atr = float((recent["High"] - recent["Low"]).rolling(14, min_periods=1).mean().iloc[-1])
+            reference_width = max(recent_atr * 0.60, latest_close * 0.002)
+
+            def add_reference_zone(kind):
+                values = recent["Low"] if kind == "demand" else recent["High"]
+                pivots = []
+                for position in range(1, len(values) - 1):
+                    value = float(values.iloc[position])
+                    is_pivot = (
+                        value <= float(values.iloc[position - 1]) and value <= float(values.iloc[position + 1])
+                        if kind == "demand"
+                        else value >= float(values.iloc[position - 1]) and value >= float(values.iloc[position + 1])
+                    )
+                    on_correct_side = value <= latest_close if kind == "demand" else value >= latest_close
+                    if is_pivot and on_correct_side:
+                        pivots.append((value, position))
+                if not pivots:
+                    return
+                level, position = (max(pivots, key=lambda item: item[0]) if kind == "demand"
+                                   else min(pivots, key=lambda item: item[0]))
+                pivot_time = pd.Timestamp(recent.index[position]).tz_localize(None)
+                zones.append({
+                    "type": kind, "time": int(pivot_time.timestamp()),
+                    "top": round(level + reference_width, 2),
+                    "bottom": round(max(0.01, level - reference_width), 2),
+                    "entry_low": round(max(0.01, level - reference_width), 2),
+                    "entry_high": round(level + reference_width, 2),
+                    "score": "REF", "grade": "Nearest reference level",
+                    "fresh": False, "tested": False, "reference": True,
+                })
+
+            if "demand" not in visible_types:
+                add_reference_zone("demand")
+            if "supply" not in visible_types:
+                add_reference_zone("supply")
+
+        # One Demand below and one Supply above current price keeps the chart
+        # clean and gives the user the next levels to watch.
+        zones = zones[:2]
         for zone in zones:
             zone["timeframe"] = selected_tf.upper()
 
@@ -474,7 +747,7 @@ def chart(symbol, period):
                 "close": float(row["Close"])
             })
 
-        return jsonify({"candles": chart_data, "zones": zones})
+        return jsonify({"candles": chart_data, "zones": zones, "offline_sample": offline_sample})
 
     except Exception as e:
         import traceback
@@ -494,6 +767,32 @@ def run_scanner(job_id, timeframe, symbols):
             # Evaluate several recent zones first; only then apply the strict
             # quality filter below, so a valid older premium zone is not missed.
             zones = detect_zones(history, timeframe=timeframe, max_zones=12)
+            latest_close = float(pd.to_numeric(history["Close"], errors="coerce").dropna().iloc[-1])
+            # A very old zone can technically remain fresh forever (for
+            # example an entry near Rs.37 while the stock trades near Rs.2637).
+            # Keep scanner signals close enough to the current market price.
+            actionable = []
+            for zone in zones:
+                midpoint = (zone["entry_low"] + zone["entry_high"]) / 2
+                price_distance = abs(midpoint - latest_close) / latest_close if latest_close else 1
+                # Never show a completed or broken trade as a new scanner
+                # signal. Demand is invalid below its entry-low; Supply is
+                # invalid above its entry-high. Their target must also still
+                # be ahead of the current price.
+                if zone["type"] == "demand":
+                    zone_is_intact = latest_close >= float(zone["entry_low"])
+                    target_is_open = latest_close <= float(zone["exit"])
+                else:
+                    zone_is_intact = latest_close <= float(zone["entry_high"])
+                    target_is_open = latest_close >= float(zone["exit"])
+                if (
+                    zone["score"] >= 60
+                    and zone["risk_reward"] >= 2
+                    and price_distance <= 0.20
+                    and zone_is_intact
+                    and target_is_open
+                ):
+                    actionable.append(zone)
             return [{
                 "symbol": symbol,
                 "company": row.Company,
@@ -514,8 +813,12 @@ def run_scanner(job_id, timeframe, symbols):
                 "bos": zone["bos"],
                 "fvg": zone["fvg"],
                 "liquidity_sweep": zone["liquidity_sweep"],
+                "order_block": zone["order_block"],
+                "choch": zone["choch"],
+                "risk_reward": zone["risk_reward"],
                 "htf": zone["higher_timeframe"],
-            } for zone in zones if zone["score"] >= 60]
+                "ltp": round(latest_close, 2),
+            } for zone in actionable]
         except Exception:
             return None
 
@@ -608,7 +911,7 @@ def market_overview():
 @app.get("/api/sector-trend/<symbol>")
 def sector_trend(symbol):
     """Return the matching NSE sector's latest direction for the dashboard."""
-    sector, ticker_symbol = SECTOR_INDICES.get(symbol.upper(), ("Broad Market", "^NSEI"))
+    sector, ticker_symbol = SECTOR_INDICES.get(symbol.upper(), (sector_name_for_symbol(symbol), "^NSEI"))
     try:
         data = yf.Ticker(ticker_symbol).history(period="5d", interval="1d", auto_adjust=False)
         if len(data) < 2:
@@ -616,6 +919,15 @@ def sector_trend(symbol):
         change = float(data["Close"].iloc[-1] - data["Close"].iloc[-2])
         return jsonify({"sector": sector, "trend": "Bullish" if change >= 0 else "Bearish"})
     except Exception:
+        # If the sector index feed is down, retain a useful live direction
+        # based on the selected stock instead of leaving the Sector card blank.
+        try:
+            stock_data = get_symbol_history(symbol)
+            if len(stock_data) >= 2:
+                change = float(stock_data["Close"].iloc[-1] - stock_data["Close"].iloc[-2])
+                return jsonify({"sector": sector, "trend": "Bullish" if change >= 0 else "Bearish", "proxy": True})
+        except Exception:
+            pass
         return jsonify({"sector": sector, "trend": "Unavailable"})
 
 
@@ -638,5 +950,7 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000)),
-        debug=False,
+        # Local `python app.py` development server automatically reloads
+        # after a saved change. Render and the desktop sidecar do not use it.
+        debug=True,
     )

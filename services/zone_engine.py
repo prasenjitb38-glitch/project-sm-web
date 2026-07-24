@@ -41,6 +41,14 @@ def _timestamp(value):
 
 def _indicators(frame):
     work = frame.copy()
+    # Historical providers can return OHLCV as text. Zone calculations must
+    # always receive numeric columns, including after a timeframe resample.
+    for column in ["Open", "High", "Low", "Close"]:
+        work[column] = pd.to_numeric(work[column], errors="coerce")
+    if "Volume" not in work:
+        work["Volume"] = 0
+    work["Volume"] = pd.to_numeric(work["Volume"], errors="coerce").fillna(0).astype("float64")
+    work = work.dropna(subset=["Open", "High", "Low", "Close"])
     work["range"] = work["High"] - work["Low"]
     previous_close = work["Close"].shift(1)
     true_range = pd.concat([
@@ -56,9 +64,8 @@ def _indicators(frame):
     loss = (-change.clip(upper=0)).rolling(14, min_periods=8).mean()
     rs = gain / loss.replace(0, pd.NA)
     work["rsi"] = 100 - (100 / (1 + rs))
-    if "Volume" not in work:
-        work["Volume"] = 0
-    work["volume_average"] = work["Volume"].replace(0, pd.NA).rolling(20, min_periods=5).mean()
+    volume_for_average = work["Volume"].mask(work["Volume"].eq(0))
+    work["volume_average"] = volume_for_average.rolling(20, min_periods=5).mean()
     return work
 
 
@@ -151,6 +158,8 @@ def detect_zones(df, timeframe="1d", max_zones=4):
             bos = False
             fresh = False
             liquidity_sweep = False
+            choch = False
+            order_block = False
 
             # Demand: RBR or DBR with at least 3 ATR upward departure.
             if up_move >= atr * 3 and float(after["Close"].iloc[-1]) > base_high:
@@ -160,6 +169,10 @@ def detect_zones(df, timeframe="1d", max_zones=4):
                 fvg = float(after["Low"].iloc[-1]) > float(after["High"].iloc[0])
                 fresh = later.empty or float(later["Low"].min()) > base_high
                 liquidity_sweep = float(prior_candles["Low"].min()) < float(work["Low"].iloc[start - 5:start].min())
+                # A demand order block contains the final bearish base candle.
+                order_block = bool((base["Close"] <= base["Open"]).any())
+                # CHoCH is a bullish structure break after a preceding drop.
+                choch = bos and prior == "D"
 
             # Supply: DBD or RBD with at least 3 ATR downward departure.
             elif down_move >= atr * 3 and float(after["Close"].iloc[-1]) < base_low:
@@ -169,6 +182,10 @@ def detect_zones(df, timeframe="1d", max_zones=4):
                 fvg = float(after["High"].iloc[-1]) < float(after["Low"].iloc[0])
                 fresh = later.empty or float(later["High"].max()) < base_low
                 liquidity_sweep = float(prior_candles["High"].max()) > float(work["High"].iloc[start - 5:start].max())
+                # A supply order block contains the final bullish base candle.
+                order_block = bool((base["Close"] >= base["Open"]).any())
+                # CHoCH is a bearish structure break after a preceding rally.
+                choch = bos and prior == "R"
 
             if not zone_type:
                 continue
@@ -204,6 +221,11 @@ def detect_zones(df, timeframe="1d", max_zones=4):
             grade, stars = _grade(score)
             reward = float(after["High"].max()) - base_high if zone_type == "demand" else base_low - float(after["Low"].min())
             risk_reward = reward / base_width if base_width else 0
+            # RR 1:2 is a quality requirement. The zone remains visible on
+            # the chart for context, but cannot be promoted above Medium.
+            if risk_reward < 2:
+                score = min(score, 74)
+                grade, stars = _grade(score)
 
             zones.append({
                 "pattern": f"{prior}{'B' * base_size}{'R' if zone_type == 'demand' else 'D'}",
@@ -217,14 +239,27 @@ def detect_zones(df, timeframe="1d", max_zones=4):
                 "base_candles": base_size, "departure_atr": round(impulse / atr, 2),
                 "volume_ratio": round(volume_ratio, 2), "fvg": fvg, "bos": bos,
                 "liquidity_sweep": liquidity_sweep, "trend_aligned": trend_ok,
+                "order_block": order_block, "choch": choch,
                 "rsi_confirmation": rsi_ok, "ema_confirmation": ema_ok,
                 "higher_timeframe": htf_name, "higher_timeframe_confirmed": htf_ok,
                 "risk_reward": round(risk_reward, 2),
             })
 
-    # Keep newest non-overlapping zones. Fresh higher-score candidates win.
+    # Keep newest non-overlapping zones. Reserve the best Demand *and* Supply
+    # candidate first so a chart never hides every Supply zone merely because
+    # more recent Demand zones occupy the result limit.
+    ranked = sorted(zones, key=lambda item: (item["fresh"], item["score"], item["time"]), reverse=True)
     selected = []
-    for zone in sorted(zones, key=lambda item: (item["fresh"], item["score"], item["time"]), reverse=True):
+    for wanted_type in ("demand", "supply"):
+        for zone in ranked:
+            if zone["type"] != wanted_type:
+                continue
+            selected.append(zone)
+            break
+
+    for zone in ranked:
+        if zone in selected:
+            continue
         overlap = any(
             zone["type"] == current["type"]
             and zone["bottom"] <= current["top"] and zone["top"] >= current["bottom"]

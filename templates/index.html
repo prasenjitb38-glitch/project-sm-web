@@ -26,8 +26,10 @@ button{background:#1d6fff;color:#fff;border:none;padding:10px 18px;border-radius
 .zone{position:absolute;right:0;border-left:3px solid;border-top:1px solid;border-bottom:1px solid;opacity:.78}
 .zone.demand{background:rgba(20,184,120,.17);border-color:#22c55e}
 .zone.supply{background:rgba(239,68,68,.17);border-color:#ef4444}
-.zone-label{position:absolute;left:7px;top:3px;font-size:11px;font-weight:bold;letter-spacing:.04em}
+.zone-label{position:absolute;left:7px;top:3px;font-size:9px;font-weight:600;letter-spacing:.04em;opacity:.22;white-space:nowrap;line-height:1.25}
+.zone-htf{font-size:8px;font-weight:500;opacity:.85}
 .zone.demand .zone-label{color:#86efac}.zone.supply .zone-label{color:#fca5a5}
+.scanner-zone-demand{color:#36e879}.scanner-zone-supply{color:#ff6161}
 .scanner-panel{margin:0 20px 24px;background:#102b4d;border-radius:15px;padding:16px;overflow:hidden}
 .scanner-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .scanner-head h2{font-size:18px;margin-right:auto}.scanner-head select{padding:9px;border-radius:8px;border:1px solid #31537a;background:#173b68;color:#fff}
@@ -100,9 +102,9 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
   .dashboard{grid-template-columns:minmax(0,62%) minmax(0,38%)}
   .main{grid-column:1 / 2;grid-row:3;padding:6px 5px 6px 20px}
   #scannerPanel{grid-column:2 / -1;grid-row:3;margin-left:5px}
-  .dashboard .overview{height:58px;gap:6px;grid-template-columns:repeat(3,118px) minmax(145px,1fr)}
-  .dashboard .market-card{padding:5px 7px;min-height:58px}
-  .dashboard .market-card small{font-size:10px}.dashboard .market-card strong{font-size:13px;margin:2px 0}.dashboard .market-card span{font-size:9px}
+  .dashboard .overview{height:64px;gap:6px;grid-template-columns:repeat(3,118px) minmax(145px,1fr)}
+  .dashboard .market-card{padding:6px 7px;height:64px;min-height:64px;overflow:hidden}
+  .dashboard .market-card small{font-size:10px;line-height:11px}.dashboard .market-card strong{font-size:13px;line-height:14px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dashboard .market-card span{display:block;font-size:9px;line-height:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dashboard .dashboard-bottom{height:58px}
   #openScanner{display:none}
 }
@@ -122,6 +124,11 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 .criteria-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.criteria-title button{padding:6px 12px;font-size:11px}.feature-panel{display:none;background:#030812;color:#eaf2ff;padding:24px;overflow:auto}.feature-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #1a2c43;padding-bottom:13px;margin-bottom:14px}.feature-head h1{font-size:22px}.feature-content{min-height:calc(100vh - 105px)}.workspace.feature-open> :not(#featurePanel){display:none!important}.workspace.feature-open{display:block!important;height:100vh!important;overflow:hidden!important}.workspace.feature-open #featurePanel{display:block;height:100vh}.feature-content>#chartArea,.feature-content>#scannerPanel,.feature-content>#multiPanel,.feature-content>#alertsPanel,.feature-content>#settingsPanel{display:block!important;position:static!important;width:100%!important;height:calc(100vh - 115px)!important;margin:0!important;padding:0!important}.feature-content>#scannerPanel,.feature-content>#multiPanel,.feature-content>#alertsPanel,.feature-content>#settingsPanel{height:auto!important;min-height:420px!important;padding:16px!important}.feature-content>#settingsPanel{display:block!important}.feature-content>#alertsPanel{display:block!important}.feature-content .chart-box{height:calc(100vh - 115px)!important}.feature-content #chart{min-height:500px}.feature-content #stockTrendPanel{display:block!important}.app-sidebar{width:160px}.workspace{margin-left:160px}.brand-logo{width:108px;height:90px}.nav-menu button{font-size:12px;padding:9px 8px}.workspace.fundamental-open{margin-left:160px}
 @media(max-width:768px){.feature-panel{padding:14px}.workspace.feature-open{margin-left:0}.feature-head h1{font-size:18px}}
 .chart-tools-label{font-size:10px;color:#9cc4ff;margin-left:5px}.drawing-status{font-size:10px;color:#bcd1ec;align-self:center}.timeframes .tool-active{background:#f59e0b;color:#111827}.chart-tf-select{height:32px;background:rgba(13,34,57,.38);color:#d9ebff;border:1px solid rgba(85,128,176,.5);border-radius:7px;padding:0 7px;font-size:11px;cursor:pointer}.timeframes .tf{background:rgba(13,34,57,.26);border:1px solid rgba(85,128,176,.42);color:#d9ebff;transition:background .16s,border-color .16s,transform .16s}.timeframes .tf:hover{background:rgba(29,111,255,.42);border-color:#65a2ff}.timeframes .tf.active{background:rgba(29,111,255,.78);border-color:#79adff;box-shadow:0 0 0 1px rgba(121,173,255,.24)}.chart-action-status{font-size:10px;color:#92b4d8;align-self:center;min-width:62px}.chart-action-status.updated{color:#86efac}
+.chart-title{display:flex;align-items:center;gap:10px;padding-right:48px}.chart-title .search-wrap{display:block;flex:0 0 230px;min-width:0;margin-left:auto;background:rgba(7,19,33,.34);border-color:rgba(85,128,176,.45)}.chart-title .search-wrap #search{height:30px;font-size:11px}.chart-title .search-wrap span{top:4px;font-size:17px}.intraday-picker{position:relative}.intraday-menu{display:none;position:absolute;z-index:40;top:calc(100% + 5px);left:0;min-width:78px;padding:5px;background:rgba(7,19,33,.62);backdrop-filter:blur(7px);border:1px solid rgba(94,141,190,.5);border-radius:7px;box-shadow:0 8px 20px rgba(0,0,0,.32)}.intraday-picker.open .intraday-menu{display:grid;gap:3px}.intraday-menu button{padding:6px 8px;background:rgba(18,46,76,.35);border:1px solid transparent;color:#d9ebff;border-radius:4px;text-align:left;font-size:11px}.intraday-menu button:hover,.intraday-menu button.active{background:rgba(29,111,255,.54);border-color:rgba(120,173,255,.72)}@media(max-width:700px){.chart-title .search-wrap{flex-basis:155px}.chart-title .search-wrap #search{font-size:10px}}
+.search-suggestions{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;max-height:236px;overflow:auto;background:rgba(5,14,26,.94);border:1px solid rgba(85,128,176,.55);border-radius:7px;box-shadow:0 9px 22px rgba(0,0,0,.42)}.search-suggestions.open{display:block}.search-suggestion{width:100%;display:flex;align-items:baseline;gap:7px;padding:7px 9px;background:transparent;border:0;border-radius:0;color:#dcecff;text-align:left;font-size:11px}.search-suggestion:hover,.search-suggestion:focus{background:rgba(29,111,255,.45);outline:0}.search-suggestion b{min-width:67px;color:#86b8ff}.search-suggestion small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b4c6da}
+@media(min-width:1000px){.main{padding-bottom:6px!important}#multiPanel{margin-top:2px!important;overflow:hidden!important}}
+@media(min-width:1000px){.chart-title{min-height:38px;padding:6px 46px 6px 10px;font-size:14px}.chart-title .search-wrap{flex-basis:180px}.chart-title .search-wrap #search{height:27px;padding:6px 28px 6px 9px;font-size:10px}.chart-title .search-wrap span{top:3px;right:8px;font-size:15px}}
+#chartTools{display:none!important}#scannerPanel .scan-symbol{padding:3px 6px;font-size:10px;line-height:1.1;border-radius:6px}.score-filter{background:rgba(7,19,33,.38)!important;color:#cfe4ff!important;border:1px solid rgba(109,157,210,.52)!important;border-radius:7px!important;padding:5px 7px!important;font-size:10px!important;backdrop-filter:blur(8px)}.score-filter option{background:#071321!important;color:#dcecff!important}.scanner-head #runScanner{background:rgba(29,111,255,.52);border:1px solid rgba(126,177,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.16);transition:background .18s,transform .18s,box-shadow .18s}.scanner-head #runScanner:hover{background:rgba(29,111,255,.78)}.scanner-head #runScanner:active,.scanner-head #runScanner.is-scanning{background:rgba(21,96,206,.28);border-color:#85b6ff;box-shadow:0 0 0 2px rgba(91,155,255,.25),inset 0 0 14px rgba(91,155,255,.2);transform:scale(.97)}.scanner-head #runScanner:disabled{cursor:wait;opacity:1}.broker-setup{margin-top:16px;padding-top:13px;border-top:1px solid #1a2c43}.broker-setup h3{font-size:15px;margin-bottom:5px}.broker-setup p,.broker-setup small{display:block;color:#9cc4ff;font-size:11px;margin:5px 0}.broker-setup #brokerSetupStatus{font-size:11px;color:#facc15}.sentiment-gauge{--sentiment-angle:0deg}.sentiment-gauge::before{content:'';position:absolute;z-index:3;left:50%;bottom:1px;width:3px;height:44px;border:1px solid #f4f4f4;border-radius:3px;background:linear-gradient(90deg,#777,#f8f8f8 48%,#a0a0a0);box-shadow:0 0 7px rgba(220,220,220,.9);transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--sentiment-angle));transition:transform .45s ease}.sentiment-gauge div{z-index:4}.sentiment-gauge .sentiment-dot{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}.multi-grid>div:first-child{max-height:112px;overflow-y:auto;padding-right:5px}.multi-grid>div:first-child::-webkit-scrollbar{width:5px}.multi-grid>div:first-child::-webkit-scrollbar-thumb{background:#31537a;border-radius:8px}.multi-grid>div:first-child::-webkit-scrollbar-track{background:transparent}#multiPanel .tf{background:rgba(13,34,57,.24);border:1px solid rgba(85,128,176,.42);color:#d9ebff;transition:background .16s,border-color .16s}#multiPanel .tf:hover{background:rgba(29,111,255,.42);border-color:#65a2ff}#multiPanel .tf.active{background:rgba(29,111,255,.8);border-color:#8ab8ff;color:#fff;box-shadow:0 0 0 1px rgba(138,184,255,.28)}
 /* Transparent vertical chart toolbar on the left. */
 .chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
 </style>
@@ -142,7 +149,7 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
         <button data-target="settingsPanel">⚙ &nbsp;Settings</button>
         <button id="fundamentalButton" data-target="fundamentalPanel">Fundamental Scan</button>
     </nav>
-    <section id="sidebarSentiment" class="connection sentiment-sidebar"><h3>Market Sentiment</h3><div class="sentiment-gauge"><div><b>Bullish</b><small>Market trend</small></div></div></section>
+    <section id="sidebarSentiment" class="connection sentiment-sidebar"><h3>Market Sentiment</h3><div class="sentiment-gauge"><div><b id="sentimentValue">Loading…</b><small id="sentimentNote">Checking indices</small></div></div></section>
     <div class="connection">● Connected<br>NSE data available</div>
 </aside>
 <div class="workspace">
@@ -202,12 +209,15 @@ Refresh
             <option value="1mo">Monthly</option><option value="3mo">3 Months</option>
             <option value="6mo">6 Months</option><option value="1y">Yearly</option>
         </select>
+        <select id="scoreFilter" class="score-filter" title="Minimum zone score">
+            <option value="60">60+ Medium</option><option value="75">75+ Strong</option><option value="90">90+ Institutional</option>
+        </select>
         <button id="runScanner" type="button">Scan Selected Index</button>
         <span id="scannerStatus">Ready to scan.</span>
     </div>
     <div class="scanner-table-wrap">
         <table class="scanner-table">
-            <thead><tr><th>Symbol</th><th>Pattern / Zone</th><th>TF</th><th>Strength</th><th>Score</th><th>Status</th><th>Entry Range</th><th>Target</th></tr></thead>
+            <thead><tr><th>Symbol</th><th>Pattern / Zone</th><th>TF</th><th>Strength</th><th>Score</th><th>Status</th><th>Entry / LTP</th><th>Target</th></tr></thead>
             <tbody id="scannerRows"><tr><td colspan="8">Run the scanner to find score 60+ supply and demand zones.</td></tr></tbody>
         </table>
     </div>
@@ -226,15 +236,15 @@ Refresh
     </div>
 
     <div class="timeframes">
-        <select id="intradayTimeframe" class="chart-tf-select" aria-label="Intraday chart timeframe">
-            <option value="">Intraday</option>
-            <option value="5m">5m</option>
-            <option value="15m">15m</option>
-            <option value="1h">1Hr</option>
-            <option value="4h">4Hr</option>
-            <option value="6h">6Hr</option>
-            <option value="12h">12Hr</option>
-        </select>
+        <select id="intradayTimeframe" hidden><option value=""></option></select>
+        <div class="intraday-picker">
+            <button id="intradayButton" class="tf" type="button">Intraday</button>
+            <div id="intradayMenu" class="intraday-menu" aria-label="Intraday chart timeframe">
+                <button type="button" data-intraday="5m">5m</button><button type="button" data-intraday="15m">15m</button>
+                <button type="button" data-intraday="1h">1Hr</button><button type="button" data-intraday="4h">4Hr</button>
+                <button type="button" data-intraday="6h">6Hr</button><button type="button" data-intraday="12h">12Hr</button>
+            </div>
+        </div>
         <button class="tf" data-period="1d">1D</button>
 
         <button class="tf" data-period="1wk">1W</button>
@@ -262,14 +272,19 @@ Refresh
 </div>
 
 <section id="alertsPanel" class="panel-section"><h2>Recent Alerts</h2><p id="alertMessage" style="color:#bcd1ec">Scanner alerts will appear here when a premium zone is found.</p></section>
-<section id="multiPanel" class="panel-section"><h2 id="multiTitle">Multi-Timeframe Analysis</h2><div class="multi-grid"><div><button class="tf active" data-multi-tf="1d">Dly</button><button class="tf" data-multi-tf="1wk">Wkly</button><button class="tf" data-multi-tf="1mo">Mly</button><button class="tf" data-multi-tf="3mo">Qly</button><button class="tf" data-multi-tf="6mo">Hly</button><button class="tf" data-multi-tf="1y">Yrly</button><p>Trend <b id="multiTrend">Loading…</b></p><p>Strength <b id="multiStrength">—</b></p><p>Structure <b id="multiStructure">—</b></p><p>HTF Sup <b id="multiSupport">—</b></p><p>HTF Res <b id="multiResistance">—</b></p><p>Overall View <b id="multiOverall">—</b></p></div><div id="multiPreview" class="mini-candles"><div class="empty-preview">Select a stock to show chart</div></div></div></section>
-<section id="topZonesPanel" class="panel-section dashboard-table"><h2>Top Supply &amp; Demand Zones</h2><table><thead><tr><th>Symbol</th><th>TF</th><th>Type</th><th>Range</th><th>Score</th></tr></thead><tbody id="dashboardZoneRows"><tr><td colspan="5">Run Scanner to populate zones.</td></tr></tbody></table></section>
-<section id="stockTrendPanel" class="panel-section trend-panel"><h2>Selected Stock Trend</h2><p><span id="trendSymbol">Select a stock</span></p><p>Stock: <b id="stockTrendValue">—</b></p><p>Sector: <b id="sectorName">—</b></p><p>Sector Trend: <b id="sectorTrendValue">—</b></p></section>
+<section id="multiPanel" class="panel-section"><h2 id="multiTitle">Multi-Timeframe Analysis</h2><div class="multi-grid"><div><button class="tf active" data-multi-tf="1d">1D</button><button class="tf" data-multi-tf="1wk">1W</button><button class="tf" data-multi-tf="1mo">1M</button><button class="tf" data-multi-tf="3mo">3M</button><button class="tf" data-multi-tf="6mo">6M</button><button class="tf" data-multi-tf="1y">1Y</button><p>Trend <b id="multiTrend">Loading…</b></p><p>Strength <b id="multiStrength">—</b></p><p>Structure <b id="multiStructure">—</b></p><p>HTF Sup <b id="multiSupport">—</b></p><p>HTF Res <b id="multiResistance">—</b></p><p>Overall View <b id="multiOverall">—</b></p></div><div id="multiPreview" class="mini-candles"><div class="empty-preview">Select a stock to show chart</div></div></div></section>
+<section id="topZonesPanel" class="panel-section dashboard-table"><h2>Top Supply &amp; Demand — Best Companies</h2><table><thead><tr><th>Company</th><th>TF</th><th>Type</th><th>Range</th><th>Score</th></tr></thead><tbody id="dashboardZoneRows"><tr><td colspan="5">Run Scanner to show best companies.</td></tr></tbody></table></section>
+<section id="stockTrendPanel" class="panel-section trend-panel"><h2>Sector</h2><p><span id="trendSymbol">Select a stock</span></p><p>Stock: <b id="stockTrendValue">—</b></p><p>Sector: <b id="sectorName">—</b></p><p>Sector Trend: <b id="sectorTrendValue">—</b></p></section>
 <section id="sentimentPanel" class="panel-section"><h2>Market Sentiment</h2><div class="sentiment-gauge"><div><b>Bullish</b><small>Market trend</small></div></div></section>
-<section id="settingsPanel" class="panel-section"><h2>Settings</h2><div class="settings-row"><label>Default timeframe</label><select id="defaultTimeframe"><option value="1d">1D</option><option value="1wk">1W</option><option value="1mo">1M</option></select><label><input id="alertEnabled" type="checkbox"> Enable zone alerts</label></div></section>
+<section id="settingsPanel" class="panel-section"><h2>Settings</h2><div class="settings-row"><label>Default timeframe</label><select id="defaultTimeframe"><option value="1d">1D</option><option value="1wk">1W</option><option value="1mo">1M</option></select><label><input id="alertEnabled" type="checkbox"> Enable zone alerts</label></div><div class="broker-setup"><h3>Broker API Connection</h3><p>Live broker data is optional. Select a broker to prepare the connection.</p><div class="settings-row"><select id="brokerProvider"><option value="">Select broker</option><option value="zerodha">Zerodha Kite</option><option value="upstox">Upstox</option><option value="angelone">Angel One SmartAPI</option><option value="dhan">Dhan</option><option value="fyers">Fyers</option></select><button id="saveBrokerSetup" type="button">Save Broker Choice</button><span id="brokerSetupStatus">No broker selected</span></div><small>API key and secret will be configured securely on the server; they are not saved in this browser.</small></div></section>
 
 <script>
 
+const stockDirectory = [...{{ stocks | tojson }},
+    {symbol:'NIFTY50',company:'NIFTY 50 Index'}, {symbol:'NIFTY100',company:'NIFTY 100 Index'},
+    {symbol:'NIFTY200',company:'NIFTY 200 Index'}, {symbol:'BANKNIFTY',company:'Bank Nifty Index'},
+    {symbol:'SENSEX',company:'BSE Sensex Index'}, {symbol:'NIFTYIT',company:'Nifty IT Index'}
+];
 let currentSymbol = "";
 let currentTF = "6mo";
 let currentZones = [];
@@ -312,9 +327,13 @@ function renderZones(){
         block.style.left=`${Math.max(0,x)}px`;
         block.style.top=`${Math.min(yTop,yBottom)}px`;
         block.style.height=`${Math.max(3,Math.abs(yBottom-yTop))}px`;
-        const state=zone.fresh ? "FRESH" : "TESTED";
-        const htf=zone.higher_timeframe_confirmed ? `HTF: ${zone.higher_timeframe}` : 'HTF: No confirmation';
-        block.innerHTML=`<span class="zone-label">${zone.pattern || ""} • ${zone.grade || "ZONE"} • ${state} • ${zone.score || "-"}/100<br>${htf}</span>`;
+        // Keep the chart readable, but retain the HTF confirmation directly
+        // below each level so the trader can see why it is supported.
+        const htfLabel = zone.higher_timeframe_confirmed
+            ? zone.higher_timeframe
+            : (zone.reference ? 'Price pivot reference' : 'No HTF confirmation');
+        const htfTitle = zone.type === 'demand' ? 'HTF Sup' : 'HTF Res';
+        block.innerHTML=`<span class="zone-label">${String(zone.type || 'zone').toUpperCase()} · ${zone.score || "-"}<br><span class="zone-htf">${htfTitle}: ${htfLabel}</span></span>`;
         layer.appendChild(block);
     });
 }
@@ -330,8 +349,16 @@ async function loadChart(symbol){
         const d = Array.isArray(payload) ? payload : payload.candles;
         if(!d || !d.length) throw new Error('Symbol not found on NSE');
         currentSymbol = cleanSymbol;
-        document.getElementById("selectedStock").innerText = cleanSymbol;
+        localStorage.setItem('projectSmSelectedSymbol', cleanSymbol);
+        const offlineSample = !Array.isArray(payload) && payload.offline_sample;
+        document.getElementById("selectedStock").innerText = offlineSample ? `${cleanSymbol} — Offline sample` : cleanSymbol;
+        if(offlineSample) showChartAction('Offline sample — not live data');
     currentZones = Array.isArray(payload) ? [] : (payload.zones || []);
+    if(!offlineSample){
+        showChartAction(currentZones.length
+            ? `${currentZones.length} active zone${currentZones.length > 1 ? 's' : ''} near LTP`
+            : 'No active zone near current price');
+    }
     latestCandles=d;
     series.setData(d);
     loadMultiTimeframe(cleanSymbol, d);
@@ -401,17 +428,41 @@ chart.subscribeClick(param=>{
 });
 
 let scannerPoller=null;
+let lastScannerResults=[];
+let lastScannedCount=0;
+function scannerNumber(value){
+    const match=String(value ?? '').replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
+    return match ? Number(match[0]) : NaN;
+}
+function isLiveScannerZone(item){
+    const prices=String(item.entry ?? '').replace(/,/g,'').match(/\d+(?:\.\d+)?/g) || [];
+    const low=Number(prices[0]), high=Number(prices[1]);
+    const ltp=Number(item.ltp), target=scannerNumber(item.exit);
+    if(!Number.isFinite(low) || !Number.isFinite(high) || !Number.isFinite(ltp) || !Number.isFinite(target)) return true;
+    // Hide broken/finished zones even if an older background scan is still
+    // being displayed in the browser.
+    return item.zone_type === 'Supply'
+        ? ltp <= high && ltp >= target
+        : ltp >= low && ltp <= target;
+}
+function scoreFilteredResults(results){
+    const minimum=Number(document.getElementById('scoreFilter')?.value || 60);
+    return results.filter(item=>Number(item.score) >= minimum && isLiveScannerZone(item));
+}
 function renderScannerRows(results){
     const rows=document.getElementById("scannerRows");
-    if(!results.length){ rows.innerHTML='<tr><td colspan="8">No Score 60+ zones found with the current rules.</td></tr>'; return; }
-    rows.innerHTML=results.slice(0,100).map(item=>`<tr>
+    const filtered=scoreFilteredResults(results);
+    const minimum=document.getElementById('scoreFilter')?.value || 60;
+    if(!filtered.length){ rows.innerHTML=`<tr><td colspan="8">No Score ${minimum}+ zones found with the current rules.</td></tr>`; return filtered; }
+    rows.innerHTML=filtered.slice(0,100).map(item=>`<tr>
         <td><button class="scan-symbol" data-symbol="${item.symbol}">${item.symbol}</button><br><small>${item.company}</small></td>
-        <td><strong>${item.pattern}</strong><br><small>${item.pattern_name} · ${item.zone_type}</small></td><td>${item.timeframe}</td>
-        <td><small>${item.stars}<br>${item.strength}</small></td><td class="score">${item.score}/100</td><td class="${item.status.toLowerCase()}">${item.status}<br><small>Base ${item.base_candles} · ${item.departure_atr}× ATR<br>HTF: ${item.htf}</small></td>
-        <td>${item.entry}</td><td>${item.exit}</td></tr>`).join('');
+        <td class="scanner-zone-${item.zone_type.toLowerCase()}"><strong>${item.pattern}</strong><br><small>${item.pattern_name} · ${item.zone_type}</small></td><td>${item.timeframe}</td>
+        <td><small>${item.stars}<br>${item.strength}</small></td><td class="score">${item.score}/100</td><td class="${item.status.toLowerCase()}">${item.status}<br><small>Base ${item.base_candles} · ${item.departure_atr}× ATR · RR ${item.risk_reward}<br>${item.order_block?'OB · ':''}${item.bos?'BOS · ':''}${item.choch?'CHoCH · ':''}${item.fvg?'FVG':''}<br>HTF: ${item.htf}</small></td>
+        <td>${item.entry}<br><small>LTP ₹${Number(item.ltp).toLocaleString('en-IN')}</small></td><td>${item.exit}</td></tr>`).join('');
     rows.querySelectorAll('.scan-symbol').forEach(button=>button.onclick=()=>{
         loadChart(button.dataset.symbol); document.getElementById('chart').scrollIntoView({behavior:'smooth'});
     });
+    return filtered;
 }
 
 function updateDashboard(results, scanned=0){
@@ -508,15 +559,25 @@ async function loadMarketOverview(){
 async function pollScanner(jobId){
     const response=await fetch(`/api/scanner/${jobId}`);
     const job=await response.json();
-    if(job.error){ document.getElementById('scannerStatus').innerText=job.error; clearInterval(scannerPoller); return; }
+    if(job.error){
+        document.getElementById('scannerStatus').innerText=job.error;
+        const scanButton=document.getElementById('runScanner');
+        scanButton.disabled=false; scanButton.classList.remove('is-scanning'); scanButton.innerText='Scan Selected Index';
+        clearInterval(scannerPoller); return;
+    }
     document.getElementById('scannerStatus').innerText=`Scanning ${job.completed}/${job.total} - ${job.results.length} zones found`;
-    renderScannerRows(job.results);
-    updateDashboard(job.results, job.completed);
+    lastScannerResults=job.results;
+    lastScannedCount=job.completed;
+    const displayed=renderScannerRows(job.results);
+    updateDashboard(displayed, job.completed);
     if(job.status==='complete'){
         document.getElementById('scannerStatus').innerText=job.unavailable===job.total
             ? 'Market data feed is unavailable. Connect a broker/API data source to scan.'
             : `Completed - ${job.results.length} matching zones${job.unavailable ? ` (${job.unavailable} symbols had no data)` : ''}`;
-        document.getElementById('runScanner').disabled=false;
+        const scanButton=document.getElementById('runScanner');
+        scanButton.disabled=false;
+        scanButton.classList.remove('is-scanning');
+        scanButton.innerText='Scan Selected Index';
         clearInterval(scannerPoller);
     }
 }
@@ -530,14 +591,41 @@ document.addEventListener('fullscreenchange',()=>{
     document.getElementById('fullscreenBtn').innerText=document.fullscreenElement ? '⤢' : '⛶';
 });
 document.getElementById('runScanner').onclick=async()=>{
-    const button=document.getElementById('runScanner'); button.disabled=true;
+    const button=document.getElementById('runScanner'); button.disabled=true; button.classList.add('is-scanning'); button.innerText='Scanning…';
     const universe=document.getElementById('scannerUniverse');
     document.getElementById('scannerStatus').innerText=`Starting ${universe.options[universe.selectedIndex].text} scan...`;
     const response=await fetch('/api/scanner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timeframe:document.getElementById('scannerTimeframe').value,universe:universe.value})});
     const data=await response.json();
-    if(data.error){ document.getElementById('scannerStatus').innerText=data.error; button.disabled=false; return; }
+    if(data.error){ document.getElementById('scannerStatus').innerText=data.error; button.disabled=false; button.classList.remove('is-scanning'); button.innerText='Scan Selected Index'; return; }
     clearInterval(scannerPoller); await pollScanner(data.job_id);
     scannerPoller=setInterval(()=>pollScanner(data.job_id),1500);
+};
+
+document.getElementById('scoreFilter').onchange=()=>{
+    const displayed=renderScannerRows(lastScannerResults);
+    updateDashboard(displayed,lastScannedCount);
+    const label=document.getElementById('scoreFilter').selectedOptions[0].text;
+    document.getElementById('scannerStatus').innerText=lastScannerResults.length
+        ? `${label} filter: ${displayed.length} zones shown`
+        : `Score filter set to ${label}. Start a scan to see results.`;
+};
+
+// Only the broker name is saved locally. Keys remain server-side when a
+// broker connection is configured, so they never appear in browser storage.
+const brokerProvider=document.getElementById('brokerProvider');
+const brokerStatus=document.getElementById('brokerSetupStatus');
+const savedBroker=localStorage.getItem('projectSmBrokerProvider') || '';
+brokerProvider.value=savedBroker;
+if(savedBroker) brokerStatus.innerText=`${brokerProvider.selectedOptions[0].text} selected — server setup required`;
+document.getElementById('saveBrokerSetup').onclick=()=>{
+    const provider=brokerProvider.value;
+    if(!provider){
+        localStorage.removeItem('projectSmBrokerProvider');
+        brokerStatus.innerText='No broker selected';
+        return;
+    }
+    localStorage.setItem('projectSmBrokerProvider',provider);
+    brokerStatus.innerText=`${brokerProvider.selectedOptions[0].text} selected — add API credentials on server`;
 };
 
 document.querySelectorAll('.nav-menu button').forEach(button=>button.onclick=()=>{
@@ -575,6 +663,8 @@ document.querySelectorAll(".tf[data-period]").forEach(btn=>{
 
         currentTF = btn.dataset.period;
         document.getElementById("intradayTimeframe").value = "";
+        document.getElementById("intradayButton").innerText = "Intraday";
+        document.querySelectorAll("[data-intraday]").forEach(item=>item.classList.remove("active"));
         showChartAction(`Chart: ${btn.innerText}`);
 
         if(currentSymbol!=""){
@@ -594,6 +684,26 @@ document.getElementById("intradayTimeframe").onchange=(event)=>{
     if(currentSymbol !== "") loadChart(currentSymbol);
 };
 
+const intradayPicker=document.querySelector('.intraday-picker');
+const intradayButton=document.getElementById('intradayButton');
+intradayButton.onclick=()=>intradayPicker.classList.toggle('open');
+document.querySelectorAll('[data-intraday]').forEach(button=>button.onclick=()=>{
+    const selected=button.dataset.intraday;
+    document.querySelectorAll('.tf[data-period]').forEach(item=>item.classList.remove('active'));
+    document.querySelectorAll('[data-intraday]').forEach(item=>item.classList.remove('active'));
+    button.classList.add('active');
+    intradayButton.innerText=button.innerText;
+    intradayPicker.classList.remove('open');
+    currentTF=selected;
+    showChartAction(`Chart: ${button.innerText}`);
+    if(currentSymbol) loadChart(currentSymbol);
+});
+document.addEventListener('click',event=>{ if(!intradayPicker.contains(event.target)) intradayPicker.classList.remove('open'); });
+
+// Move the symbol search from the toolbar to the chart's upper-right area.
+const topSearch=document.querySelector('.topbar .search-wrap');
+if(topSearch) document.querySelector('.chart-title').appendChild(topSearch);
+
 document.querySelectorAll('.tf[data-multi-tf]').forEach(btn=>btn.onclick=()=>{
     document.querySelectorAll('.tf[data-multi-tf]').forEach(item=>item.classList.remove('active'));
     btn.classList.add('active');
@@ -603,13 +713,56 @@ document.querySelectorAll('.tf[data-multi-tf]').forEach(btn=>btn.onclick=()=>{
 
 function runSearch(){
     const input=document.getElementById('search');
-    if(input.value.trim()) { loadChart(input.value); input.blur(); }
+    if(input.value.trim()) { loadChart(input.value); input.blur(); hideSuggestions(); }
 }
-document.getElementById('search').addEventListener('keydown',event=>{ if(event.key==='Enter') runSearch(); });
+const searchInput=document.getElementById('search');
+const searchSuggestions=document.createElement('div');
+searchSuggestions.id='searchSuggestions';
+searchSuggestions.className='search-suggestions';
+searchInput.parentElement.appendChild(searchSuggestions);
+function hideSuggestions(){ searchSuggestions.classList.remove('open'); }
+function renderSuggestions(){
+    const query=searchInput.value.trim().toUpperCase();
+    if(!query){ hideSuggestions(); return; }
+    const matches=stockDirectory.filter(stock=>String(stock.symbol).toUpperCase().startsWith(query) || String(stock.company).toUpperCase().includes(query)).slice(0,12);
+    if(!matches.length){ hideSuggestions(); return; }
+    searchSuggestions.innerHTML=matches.map(stock=>`<button class="search-suggestion" type="button" data-symbol="${stock.symbol}"><b>${stock.symbol}</b><small>${stock.company}</small></button>`).join('');
+    searchSuggestions.classList.add('open');
+    searchSuggestions.querySelectorAll('button').forEach(button=>button.onclick=()=>{
+        searchInput.value=button.dataset.symbol;
+        hideSuggestions();
+        loadChart(button.dataset.symbol);
+        searchInput.blur();
+    });
+}
+searchInput.addEventListener('input',renderSuggestions);
+searchInput.addEventListener('focus',renderSuggestions);
+searchInput.addEventListener('keydown',event=>{ if(event.key==='Enter') runSearch(); if(event.key==='Escape') hideSuggestions(); });
+document.addEventListener('click',event=>{ if(!searchInput.parentElement.contains(event.target)) hideSuggestions(); });
 document.getElementById('searchButton').onclick=runSearch;
 document.getElementById('searchButton').onkeydown=event=>{ if(event.key==='Enter' || event.key===' ') runSearch(); };
 // Final dashboard arrangement: three market cards plus the recent-alert card.
 async function loadMarketOverview(){
+    const updateSentiment=(markets)=>{
+        const value=document.getElementById('sentimentValue');
+        const note=document.getElementById('sentimentNote');
+        const gauge=document.querySelector('#sidebarSentiment .sentiment-gauge');
+        if(!value || !note) return;
+        const available=markets.filter(item=>Number.isFinite(Number(item.change)) && item.price!==null);
+        if(!available.length){
+            value.innerText='Unavailable';
+            note.innerText='Market data unavailable';
+            gauge?.style.setProperty('--sentiment-angle','0deg');
+            return;
+        }
+        const advances=available.filter(item=>Number(item.change)>0).length;
+        const declines=available.filter(item=>Number(item.change)<0).length;
+        const label=advances>declines ? 'Bullish' : declines>advances ? 'Bearish' : 'Neutral';
+        value.innerHTML=`<span class="sentiment-dot"></span>${label}`;
+        note.innerText=`${advances} up · ${declines} down`;
+        value.style.color=label==='Bullish' ? '#4ade80' : label==='Bearish' ? '#fb7185' : '#facc15';
+        gauge?.style.setProperty('--sentiment-angle',`${Math.round(((advances-declines)/available.length)*58)}deg`);
+    };
     const draw=(markets)=>{
         const cards=markets.map(market=>{
             const available=market.price!==null;
@@ -618,6 +771,7 @@ async function loadMarketOverview(){
             return `<div class="market-card"><small>${market.name}</small><strong>${available ? market.price.toLocaleString('en-IN') : '-'}</strong><span class="${direction}">${change}</span></div>`;
         }).join('');
         document.getElementById('marketCards').innerHTML=cards+`<div class="market-card market-alert"><small>Recent Alerts</small><strong id="topRecentAlert">No premium alerts</strong><span id="topAlertStatus">Scanner ready</span></div>`;
+        updateSentiment(markets);
     };
     try{
         const response=await fetch('/api/market-overview');
@@ -636,7 +790,8 @@ function updateDashboard(results, scanned=0){
     document.getElementById('summarySupply').innerText=results.filter(item=>item.zone_type==='Supply').length;
     document.getElementById('summaryDemand').innerText=results.filter(item=>item.zone_type==='Demand').length;
     document.getElementById('summaryPremium').innerText=results.filter(item=>item.score>=90).length;
-    document.getElementById('dashboardZoneRows').innerHTML=results.slice(0,8).map(item=>`<tr><td>${item.symbol}</td><td>${item.timeframe}</td><td class="${item.zone_type.toLowerCase()}">${item.zone_type}</td><td>${item.entry}</td><td class="score">${item.score}</td></tr>`).join('') || '<tr><td colspan="5">No matching quality zones yet.</td></tr>';
+    const best=[...results].sort((a,b)=>Number(b.score)-Number(a.score)).slice(0,8);
+    document.getElementById('dashboardZoneRows').innerHTML=best.map(item=>`<tr><td><b>${item.symbol}</b><br><small>${item.company || 'Best match'}</small></td><td>${item.timeframe}</td><td class="${item.zone_type.toLowerCase()}">${item.zone_type}</td><td>${item.entry}</td><td class="score">${item.score}/100</td></tr>`).join('') || '<tr><td colspan="5">Run Scanner to show best companies.</td></tr>';
     const premium=results.find(item=>item.score>=90);
     const alert=document.getElementById('topRecentAlert'), status=document.getElementById('topAlertStatus');
     if(alert && status && premium){
@@ -740,7 +895,7 @@ document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(bu
         openFeaturePage(resolvedTarget,label || 'Project SM');
     };
 });
-loadChart("RELIANCE");
+loadChart(localStorage.getItem('projectSmSelectedSymbol') || "RELIANCE");
 chart.timeScale().subscribeVisibleTimeRangeChange(renderZones);
 window.addEventListener("resize",()=>{chart.applyOptions({width:document.getElementById("chart").clientWidth,height:document.getElementById("chart").clientHeight});renderZones();});
 </script>
