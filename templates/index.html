@@ -140,6 +140,7 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 @media(max-width:900px){.market-ticker{display:none}}
 /* Transparent vertical chart toolbar on the left. */
 .chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
+.dashboard-title{position:relative}.dashboard-toggle{margin-left:auto;padding:2px 9px;min-width:28px;height:24px;background:rgba(29,111,255,.35);border:1px solid rgba(126,177,255,.65);font-size:16px;line-height:1}.dashboard.dashboard-collapsed .overview,.dashboard.dashboard-collapsed .dashboard-bottom{display:none}.dashboard.dashboard-collapsed{min-height:28px}.dashboard.dashboard-collapsed .dashboard-title{padding-bottom:0}
 /* On phones keep the terminal horizontal, so every dashboard panel remains available. */
 @media(max-width:768px){
   html,body{min-width:1180px;overflow-x:auto;overflow-y:auto}
@@ -195,7 +196,7 @@ Refresh
 </div>
 
 <section id="dashboard" class="dashboard">
-    <div class="dashboard-title"><h2>Dashboard</h2><span class="live-pill">Live Market: ON ●</span></div>
+    <div class="dashboard-title"><h2>Dashboard</h2><span class="live-pill">Live Market: ON ●</span><button id="dashboardToggle" class="dashboard-toggle" type="button" aria-label="Minimize dashboard">−</button></div>
     <div class="overview" id="marketCards"><div class="market-card">Loading live market...</div></div>
     <div class="dashboard-bottom scanner-summary-top"><h3>Scanner Summary</h3><div class="summary-grid"><div class="summary-card">Scanned<b id="summaryScanned">0</b></div><div class="summary-card">Supply<b id="summarySupply">0</b></div><div class="summary-card">Demand<b id="summaryDemand">0</b></div><div class="summary-card">Premium<b id="summaryPremium">0</b></div></div></div>
 </section>
@@ -967,6 +968,15 @@ document.getElementById('refreshPage').onclick=()=>{
     button.innerText='Refreshing...';
     window.setTimeout(()=>location.reload(),180);
 };
+const dashboardToggle=document.getElementById('dashboardToggle');
+if(dashboardToggle){
+    dashboardToggle.onclick=()=>{
+        const panel=document.getElementById('dashboard');
+        const collapsed=panel.classList.toggle('dashboard-collapsed');
+        dashboardToggle.textContent=collapsed ? '+' : '−';
+        dashboardToggle.setAttribute('aria-label',collapsed ? 'Expand dashboard' : 'Minimize dashboard');
+    };
+}
 async function loadMarketTicker(){
     const ticker=document.getElementById('marketTicker');
     if(!ticker) return;
