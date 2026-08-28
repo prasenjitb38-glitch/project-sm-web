@@ -8,13 +8,15 @@ from services.yahoo_data import get_live_prices
 from services.zone_engine import detect_zones
 from pathlib import Path
 from urllib.request import Request, urlopen
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from urllib.error import URLError
 from http.cookiejar import CookieJar
 from urllib.request import build_opener, HTTPCookieProcessor
 import json
 import random
+import math
 from datetime import date, timedelta, datetime, timezone
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=PROJECT_ROOT / "templates", static_folder=PROJECT_ROOT / "static")
@@ -23,6 +25,19 @@ FUNDAMENTAL_JOBS = {}
 SCANNER_LOCK = Lock()
 # A later NIFTY 50/100/200 scan must not sit behind a long NIFTY 500 job.
 SCANNER_EXECUTOR = ThreadPoolExecutor(max_workers=2)
+
+# Broker secrets must stay in environment variables on the server (or Render),
+# never in JavaScript, localStorage, a repository, or an APK.
+BROKER_CONNECTIONS = {
+    "sharekhan": {
+        "name": "Mirae Asset Sharekhan (SKAPI)",
+        "required_variables": ["SHAREKHAN_API_KEY", "SHAREKHAN_SECURE_KEY"],
+        "note": "Complete Sharekhan's secure OTP/TOTP login to start a live session.",
+    },
+}
+# Values entered through the Windows desktop app live only in the running
+# process. They are never written to disk, source control, or a cloud host.
+LOCAL_BROKER_SESSIONS = {}
 
 INDEX_UNIVERSES = {
     "nifty50": ("NIFTY 50", "nifty50.csv", "https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv"),
@@ -57,17 +72,56 @@ SECTOR_INDICES = {
     "SUNPHARMA": ("Pharma", "^CNXPHARMA"), "DRREDDY": ("Pharma", "^CNXPHARMA"),
 }
 
+# The bundled constituent CSV intentionally contains only Symbol/Company, so
+# keep a small symbol map for stocks that are commonly selected in the UI.
+# Unknown symbols are classified below from their company name instead of
+# being shown as the unhelpful "Broad Market" label.
+SECTOR_NAME_OVERRIDES = {
+    "GAIL": "Oil, Gas & Consumable Fuels", "COALINDIA": "Oil, Gas & Consumable Fuels",
+    "IOC": "Oil, Gas & Consumable Fuels", "BPCL": "Oil, Gas & Consumable Fuels",
+    "HINDALCO": "Metals & Mining", "TATASTEEL": "Metals & Mining",
+    "JSWSTEEL": "Metals & Mining", "ASIANPAINT": "Consumer Durables",
+    "CIPLA": "Pharmaceuticals", "ITC": "Fast Moving Consumer Goods",
+    "HINDUNILVR": "Fast Moving Consumer Goods", "BHARTIARTL": "Telecommunication",
+    "POWERGRID": "Power", "ADANIGREEN": "Power", "TATAPOWER": "Power",
+    "LT": "Construction", "ULTRACEMCO": "Construction Materials",
+    "TITAN": "Consumer Durables", "BAJAJ-AUTO": "Automobile",
+}
+
 
 def sector_name_for_symbol(symbol):
     """Read the locally bundled NIFTY list for a useful sector name."""
+    symbol = str(symbol).upper().strip()
+    if symbol in SECTOR_INDICES:
+        return SECTOR_INDICES[symbol][0]
+    if symbol in SECTOR_NAME_OVERRIDES:
+        return SECTOR_NAME_OVERRIDES[symbol]
     try:
         stocks = pd.read_csv(PROJECT_ROOT / "data" / "nifty500.csv")
-        match = stocks[stocks["Symbol"].astype(str).str.upper() == symbol.upper()]
+        match = stocks[stocks["Symbol"].astype(str).str.upper() == symbol]
         if not match.empty and "Industry" in match.columns:
-            return str(match.iloc[0]["Industry"])
+            industry = str(match.iloc[0]["Industry"]).strip()
+            if industry and industry.lower() != "nan":
+                return industry
+        if not match.empty:
+            company = str(match.iloc[0].get("Company", "")).lower()
+            keyword_sectors = (
+                (("bank", "financial", "finance", "insurance"), "Financial Services"),
+                (("pharma", "health", "hospital", "laborator"), "Pharmaceuticals"),
+                (("steel", "metal", "aluminium", "aluminum", "mining"), "Metals & Mining"),
+                (("power", "energy", "gas", "oil", "petroleum", "coal"), "Oil, Gas & Power"),
+                (("cement", "construction"), "Construction Materials"),
+                (("auto", "motor", "tyre", "tire"), "Automobile"),
+                (("telecom", "communication"), "Telecommunication"),
+                (("paint", "consumer", "retail", "foods", "beverage"), "Consumer Goods"),
+                (("software", "technology", "tech"), "Information Technology"),
+            )
+            for keywords, sector in keyword_sectors:
+                if any(keyword in company for keyword in keywords):
+                    return sector
     except Exception:
         pass
-    return "Broad Market"
+    return "Equity Market"
 
 
 def nse_json(endpoint):
@@ -542,6 +596,155 @@ def home():
 # ==========================
 # LIVE CHART API
 # ==========================
+@app.get("/api/broker/status")
+def broker_status():
+    """Expose configuration state only; credentials are never returned."""
+    provider = request.args.get("provider", "").strip().lower()
+    details = BROKER_CONNECTIONS.get(provider)
+    if not details:
+        return jsonify({"provider": provider, "configured": False, "message": "Select a supported broker."})
+
+    local_ready = bool(LOCAL_BROKER_SESSIONS.get(provider))
+    missing = [name for name in details["required_variables"] if not os.getenv(name)]
+    if missing and not local_ready:
+        return jsonify({
+            "provider": provider,
+            "configured": False,
+            "message": "Server setup required: " + ", ".join(missing),
+        })
+    connected = bool(LOCAL_BROKER_SESSIONS.get(provider, {}).get("connected"))
+    return jsonify({
+        "provider": provider,
+        "configured": True,
+        "connected": connected,
+        "message": (
+            "Sharekhan live session is connected."
+            if connected
+            else "Credentials are ready for this local session. " + details["note"]
+        ),
+    })
+
+
+@app.post("/api/broker/local-session")
+def configure_local_broker_session():
+    """Allow credentials only from the same Windows computer and keep them in RAM."""
+    if request.remote_addr not in {"127.0.0.1", "::1"}:
+        return jsonify({"ok": False, "message": "For security, enter broker keys only in the local Windows software."}), 403
+
+    payload = request.get_json(silent=True) or {}
+    provider = str(payload.get("provider", "")).strip().lower()
+    api_key = str(payload.get("api_key", "")).strip()
+    secure_key = str(payload.get("secure_key", "")).strip()
+    if provider != "sharekhan" or not api_key or not secure_key:
+        return jsonify({"ok": False, "message": "Enter both Sharekhan API Key and Secure Key."}), 400
+    if len(secure_key.encode("utf-8")) != 32:
+        return jsonify({
+            "ok": False,
+            "message": "Sharekhan Secure Key must be exactly 32 characters. Copy the Secure Key from the same Sharekhan App.",
+        }), 400
+
+    try:
+        from SharekhanApi.sharekhanConnect import SharekhanConnect
+        login_client = SharekhanConnect(api_key)
+        login_url = login_client.login_url(vendor_key="", version_id=None)
+    except ImportError:
+        return jsonify({
+            "ok": False,
+            "message": "Sharekhan SDK is not installed. Run: py -m pip install shareconnect websocket-client",
+        }), 503
+    except Exception:
+        return jsonify({
+            "ok": False,
+            "message": "Sharekhan SDK could not create the login URL (LOGIN_URL_FAILED).",
+        }), 502
+    LOCAL_BROKER_SESSIONS[provider] = {
+        "api_key": api_key,
+        "secure_key": secure_key,
+        "version_id": None,
+    }
+    return jsonify({
+        "ok": True,
+        "login_url": login_url,
+        "message": "Credentials accepted. Opening Sharekhan OTP/TOTP login...",
+    })
+
+
+@app.post("/api/broker/sharekhan/callback")
+def complete_sharekhan_session():
+    """Exchange Sharekhan's one-time request token without exposing secrets."""
+    if request.remote_addr not in {"127.0.0.1", "::1"}:
+        return jsonify({"ok": False, "message": "Sharekhan callback is allowed only in the local software."}), 403
+    broker_session = LOCAL_BROKER_SESSIONS.get("sharekhan")
+    request_token = str((request.get_json(silent=True) or {}).get("request_token", "")).strip()
+    # Defensive compatibility for callbacks parsed by older frontend builds:
+    # encrypted base64-style tokens may have had "+" converted to spaces or
+    # may arrive percent-encoded more than once.
+    request_token = request_token.replace(" ", "+")
+    for _ in range(2):
+        decoded_token = unquote(request_token)
+        if decoded_token == request_token:
+            break
+        request_token = decoded_token
+    # The published SDK calls urlsafe_b64decode directly and does not restore
+    # omitted Base64 padding, although valid callback tokens may omit it.
+    request_token += "=" * (-len(request_token) % 4)
+    if not broker_session or not request_token:
+        return jsonify({"ok": False, "message": "Broker credentials or request token is missing."}), 400
+    try:
+        from SharekhanApi.sharekhanConnect import SharekhanConnect
+    except ImportError:
+        return jsonify({
+            "ok": False,
+            "message": "Sharekhan SDK is not installed. Run: pip install shareconnect websocket-client",
+        }), 503
+    client = SharekhanConnect(broker_session["api_key"])
+    try:
+        generated_session = client.generate_session_without_versionId(
+            request_token, broker_session["secure_key"]
+        )
+    except Exception as exc:
+        app.logger.warning("Sharekhan session decryption failed: %s", type(exc).__name__)
+        # A failed/expired token must never be reused. Also force the next
+        # attempt to re-enter the matching API Key and Secure Key pair.
+        LOCAL_BROKER_SESSIONS.pop("sharekhan", None)
+        error_name = type(exc).__name__
+        if error_name == "InvalidTag":
+            guidance = "The Secure Key does not match this API Key/token."
+        elif error_name in {"Error", "ValueError"}:
+            guidance = "The callback token or Secure Key format is invalid."
+        else:
+            guidance = "The Sharekhan SDK could not process this callback token."
+        return jsonify({
+            "ok": False,
+            "message": (
+                f"{guidance} (SESSION_DECRYPT_FAILED/{error_name}). "
+                "Re-copy the API Key and 32-character Secure Key from the same "
+                "Sharekhan App, then start a new login."
+            ),
+        }), 502
+    try:
+        token_result = client.get_access_token(
+            broker_session["api_key"], generated_session, 12345
+        )
+        access_token = token_result
+        if isinstance(token_result, dict):
+            access_token = (
+                token_result.get("access_token")
+                or token_result.get("accessToken")
+                or token_result.get("token")
+                or token_result
+            )
+        broker_session["access_token"] = access_token
+        broker_session["connected"] = True
+        return jsonify({"ok": True, "message": "Sharekhan live session connected successfully."})
+    except Exception as exc:
+        app.logger.warning("Sharekhan access-token exchange failed: %s", type(exc).__name__)
+        return jsonify({
+            "ok": False,
+            "message": "Sharekhan rejected the access-token request (ACCESS_TOKEN_FAILED). Confirm Static IP and try again.",
+        }), 502
+
+
 @app.route("/api/chart/<symbol>/<period>")
 def chart(symbol, period):
 
@@ -906,6 +1109,75 @@ def market_overview():
             overview.append({"name": name, "price": MARKET_FALLBACKS[name], "change": 0,
                              "percent": 0, "live": False})
     return jsonify({"markets": overview})
+
+
+def _collect_market_movers(value, output):
+    """Find mover rows despite small shape changes in NSE's public response."""
+    if isinstance(value, list):
+        for item in value:
+            _collect_market_movers(item, output)
+    elif isinstance(value, dict):
+        symbol = value.get("symbol") or value.get("symbolName")
+        percent = value.get("pChange", value.get("perChange", value.get("percentChange")))
+        last = value.get("lastPrice", value.get("last"))
+        if symbol and percent is not None:
+            try:
+                output.append({
+                    "name": str(symbol).replace(".NS", ""),
+                    "price": round(float(str(last).replace(",", "")), 2) if last is not None else None,
+                    "percent": round(float(str(percent).replace(",", "")), 2),
+                })
+            except (TypeError, ValueError):
+                pass
+        for child in value.values():
+            if isinstance(child, (dict, list)):
+                _collect_market_movers(child, output)
+
+
+@app.get("/api/market-ticker")
+def market_ticker():
+    """Latest index, mover and US-market values for the scrolling header."""
+    items = []
+    for name, ticker_symbol in {
+        "NIFTY 50": "^NSEI",
+        "BANK NIFTY": "^NSEBANK",
+        "S&P 500": "^GSPC",
+        "NASDAQ": "^IXIC",
+        "DOW JONES": "^DJI",
+    }.items():
+        try:
+            data = yf.Ticker(ticker_symbol).history(period="5d", interval="1d", auto_adjust=False)
+            if len(data) < 2:
+                raise ValueError("Insufficient data")
+            last = float(data["Close"].iloc[-1])
+            previous = float(data["Close"].iloc[-2])
+            if not math.isfinite(last) or not math.isfinite(previous) or previous == 0:
+                raise ValueError("Invalid market data")
+            items.append({
+                "name": name,
+                "price": round(last, 2),
+                "percent": round((last - previous) / previous * 100, 2),
+                "kind": "index",
+            })
+        except Exception:
+            items.append({"name": name, "price": None, "percent": None, "kind": "index"})
+
+    for direction, endpoint in (
+        ("Top Gainer", "/api/live-analysis-variations?index=gainers"),
+        ("Top Loser", "/api/live-analysis-variations?index=losers"),
+    ):
+        movers = []
+        try:
+            _collect_market_movers(nse_json(endpoint), movers)
+        except Exception:
+            movers = []
+        if movers:
+            selected = max(movers, key=lambda row: row["percent"]) if direction == "Top Gainer" else min(movers, key=lambda row: row["percent"])
+            selected.update({"label": direction, "kind": "mover"})
+            items.append(selected)
+        else:
+            items.append({"name": direction, "label": direction, "price": None, "percent": None, "kind": "mover"})
+    return jsonify({"items": items, "updated_at": datetime.now(timezone.utc).isoformat()})
 
 
 @app.get("/api/sector-trend/<symbol>")

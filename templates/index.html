@@ -13,7 +13,10 @@ html,body{min-height:100%;background:#071426}body{color:#fff}
 .header{height:60px;background:#0f2948;display:flex;justify-content:center;align-items:center;font-size:24px;font-weight:bold}
 .topbar{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:15px 20px;flex-wrap:wrap}
 #search{width:100%;height:42px;border:none;outline:none;background:transparent;color:#fff;padding:10px 34px 10px 12px}.search-wrap{position:relative;flex:1;min-width:220px;background:#0b1727;border:1px solid #2a405b;border-radius:7px}.search-wrap span{position:absolute;right:11px;top:8px;color:#a9bdd3;font-size:20px;cursor:pointer}
-button{background:#1d6fff;color:#fff;border:none;padding:10px 18px;border-radius:8px}
+button{background:#1d6fff;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;transition:transform .14s ease,background .14s ease,box-shadow .14s ease,opacity .14s ease}
+button:hover{filter:brightness(1.12)}
+button:active,button.is-active{transform:scale(.96);box-shadow:0 0 0 2px rgba(121,173,255,.35),inset 0 0 12px rgba(255,255,255,.14)}
+button.is-busy{cursor:wait;background:rgba(29,111,255,.35)!important;border:1px solid #79adff!important;box-shadow:0 0 0 2px rgba(121,173,255,.2);opacity:1}
 .main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:15px;padding:0 20px 20px;height:calc(100vh - 140px)}
 .sidebar{background:#102b4d;border-radius:15px;overflow:auto;padding:10px;max-height:calc(100vh - 150px)}
 .stock-item{background:#173b68;margin-bottom:8px;padding:10px;border-radius:10px}
@@ -129,6 +132,12 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 @media(min-width:1000px){.main{padding-bottom:6px!important}#multiPanel{margin-top:2px!important;overflow:hidden!important}}
 @media(min-width:1000px){.chart-title{min-height:38px;padding:6px 46px 6px 10px;font-size:14px}.chart-title .search-wrap{flex-basis:180px}.chart-title .search-wrap #search{height:27px;padding:6px 28px 6px 9px;font-size:10px}.chart-title .search-wrap span{top:3px;right:8px;font-size:15px}}
 #chartTools{display:none!important}#scannerPanel .scan-symbol{padding:3px 6px;font-size:10px;line-height:1.1;border-radius:6px}.score-filter{background:rgba(7,19,33,.38)!important;color:#cfe4ff!important;border:1px solid rgba(109,157,210,.52)!important;border-radius:7px!important;padding:5px 7px!important;font-size:10px!important;backdrop-filter:blur(8px)}.score-filter option{background:#071321!important;color:#dcecff!important}.scanner-head #runScanner{background:rgba(29,111,255,.52);border:1px solid rgba(126,177,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.16);transition:background .18s,transform .18s,box-shadow .18s}.scanner-head #runScanner:hover{background:rgba(29,111,255,.78)}.scanner-head #runScanner:active,.scanner-head #runScanner.is-scanning{background:rgba(21,96,206,.28);border-color:#85b6ff;box-shadow:0 0 0 2px rgba(91,155,255,.25),inset 0 0 14px rgba(91,155,255,.2);transform:scale(.97)}.scanner-head #runScanner:disabled{cursor:wait;opacity:1}.broker-setup{margin-top:16px;padding-top:13px;border-top:1px solid #1a2c43}.broker-setup h3{font-size:15px;margin-bottom:5px}.broker-setup p,.broker-setup small{display:block;color:#9cc4ff;font-size:11px;margin:5px 0}.broker-setup #brokerSetupStatus{font-size:11px;color:#facc15}.sentiment-gauge{--sentiment-angle:0deg}.sentiment-gauge::before{content:'';position:absolute;z-index:3;left:50%;bottom:1px;width:3px;height:44px;border:1px solid #f4f4f4;border-radius:3px;background:linear-gradient(90deg,#777,#f8f8f8 48%,#a0a0a0);box-shadow:0 0 7px rgba(220,220,220,.9);transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--sentiment-angle));transition:transform .45s ease}.sentiment-gauge div{z-index:4}.sentiment-gauge .sentiment-dot{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}.multi-grid>div:first-child{max-height:112px;overflow-y:auto;padding-right:5px}.multi-grid>div:first-child::-webkit-scrollbar{width:5px}.multi-grid>div:first-child::-webkit-scrollbar-thumb{background:#31537a;border-radius:8px}.multi-grid>div:first-child::-webkit-scrollbar-track{background:transparent}#multiPanel .tf{background:rgba(13,34,57,.24);border:1px solid rgba(85,128,176,.42);color:#d9ebff;transition:background .16s,border-color .16s}#multiPanel .tf:hover{background:rgba(29,111,255,.42);border-color:#65a2ff}#multiPanel .tf.active{background:rgba(29,111,255,.8);border-color:#8ab8ff;color:#fff;box-shadow:0 0 0 1px rgba(138,184,255,.28)}
+.broker-key-form{display:flex;align-items:end;flex-wrap:wrap;gap:8px;margin:11px 0;padding:10px;border:1px solid #294665;border-radius:8px;background:rgba(7,19,33,.44)}.broker-key-form label{display:grid;gap:4px;color:#9cc4ff;font-size:11px}.broker-key-form input{width:190px;padding:8px;border:1px solid #31537a;border-radius:6px;background:#071321;color:#eef6ff}.broker-key-form small{width:100%;margin:0!important}.broker-key-form button{padding:8px 12px}
+.market-ticker{position:relative;flex:1;min-width:180px;height:30px;overflow:hidden;border:1px solid rgba(65,102,145,.42);border-radius:7px;background:rgba(7,19,33,.55);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.market-ticker-track{display:flex;width:max-content;align-items:center;height:100%;gap:27px;padding-left:100%;white-space:nowrap;animation:marketTicker 34s linear infinite}
+.market-ticker:hover .market-ticker-track{animation-play-state:paused}.ticker-item{font-size:10px;color:#d8e8fa}.ticker-item b{margin-right:5px;color:#9cc4ff}.ticker-item.positive span{color:#36e879}.ticker-item.negative span{color:#ff6161}.ticker-item.unavailable span{color:#8fa5bd}
+@keyframes marketTicker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@media(max-width:900px){.market-ticker{display:none}}
 /* Transparent vertical chart toolbar on the left. */
 .chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
 </style>
@@ -159,10 +168,11 @@ PROJECT SM WEB
 </div>
 
 <div class="topbar">
+<div id="marketTicker" class="market-ticker" aria-label="Latest market ticker"><div class="market-ticker-track"><span class="ticker-item unavailable">Loading latest markets...</span></div></div>
 
 <div class="search-wrap"><input id="search" placeholder="Search Symbol (e.g. RELIANCE)"><span id="searchButton" role="button" tabindex="0" title="Search">⌕</span></div>
 
-<button onclick="location.reload()">
+<button id="refreshPage" type="button">
 Refresh
 </button>
 
@@ -276,7 +286,7 @@ Refresh
 <section id="topZonesPanel" class="panel-section dashboard-table"><h2>Top Supply &amp; Demand — Best Companies</h2><table><thead><tr><th>Company</th><th>TF</th><th>Type</th><th>Range</th><th>Score</th></tr></thead><tbody id="dashboardZoneRows"><tr><td colspan="5">Run Scanner to show best companies.</td></tr></tbody></table></section>
 <section id="stockTrendPanel" class="panel-section trend-panel"><h2>Sector</h2><p><span id="trendSymbol">Select a stock</span></p><p>Stock: <b id="stockTrendValue">—</b></p><p>Sector: <b id="sectorName">—</b></p><p>Sector Trend: <b id="sectorTrendValue">—</b></p></section>
 <section id="sentimentPanel" class="panel-section"><h2>Market Sentiment</h2><div class="sentiment-gauge"><div><b>Bullish</b><small>Market trend</small></div></div></section>
-<section id="settingsPanel" class="panel-section"><h2>Settings</h2><div class="settings-row"><label>Default timeframe</label><select id="defaultTimeframe"><option value="1d">1D</option><option value="1wk">1W</option><option value="1mo">1M</option></select><label><input id="alertEnabled" type="checkbox"> Enable zone alerts</label></div><div class="broker-setup"><h3>Broker API Connection</h3><p>Live broker data is optional. Select a broker to prepare the connection.</p><div class="settings-row"><select id="brokerProvider"><option value="">Select broker</option><option value="zerodha">Zerodha Kite</option><option value="upstox">Upstox</option><option value="angelone">Angel One SmartAPI</option><option value="dhan">Dhan</option><option value="fyers">Fyers</option></select><button id="saveBrokerSetup" type="button">Save Broker Choice</button><span id="brokerSetupStatus">No broker selected</span></div><small>API key and secret will be configured securely on the server; they are not saved in this browser.</small></div></section>
+<section id="settingsPanel" class="panel-section"><h2>Settings</h2><div class="settings-row"><label>Default timeframe</label><select id="defaultTimeframe"><option value="1d">1D</option><option value="1wk">1W</option><option value="1mo">1M</option></select><label><input id="alertEnabled" type="checkbox"> Enable zone alerts</label></div><div class="broker-setup"><h3>Broker API Connection</h3><p>Live broker data is optional. Select a broker to prepare the connection.</p><div class="settings-row"><select id="brokerProvider"><option value="">Select broker</option><option value="sharekhan">Mirae Asset Sharekhan (SKAPI)</option><option value="zerodha">Zerodha Kite</option><option value="upstox">Upstox</option><option value="angelone">Angel One SmartAPI</option><option value="dhan">Dhan</option><option value="fyers">Fyers</option></select><button id="saveBrokerSetup" type="button">Save Broker Choice</button><span id="brokerSetupStatus">No broker selected</span></div><div id="sharekhanLocalForm" class="broker-key-form" hidden><label>Sharekhan API Key<input id="sharekhanApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="API Key"></label><label>Sharekhan Secure Key<input id="sharekhanSecureKey" type="password" autocomplete="off" spellcheck="false" placeholder="Secure Key"></label><button id="connectSharekhan" type="button">Connect Sharekhan</button><small>Only for Windows desktop/local software. Keys remain in memory for this session and are removed when the app closes.</small></div><small>API key and secret are never saved in this browser, GitHub, Render, or a project file.</small></div></section>
 
 <script>
 
@@ -614,9 +624,24 @@ document.getElementById('scoreFilter').onchange=()=>{
 // broker connection is configured, so they never appear in browser storage.
 const brokerProvider=document.getElementById('brokerProvider');
 const brokerStatus=document.getElementById('brokerSetupStatus');
+const sharekhanLocalForm=document.getElementById('sharekhanLocalForm');
+function toggleSharekhanForm(){ sharekhanLocalForm.hidden=brokerProvider.value!=='sharekhan'; }
 const savedBroker=localStorage.getItem('projectSmBrokerProvider') || '';
 brokerProvider.value=savedBroker;
-if(savedBroker) brokerStatus.innerText=`${brokerProvider.selectedOptions[0].text} selected — server setup required`;
+async function refreshBrokerStatus(provider){
+    if(!provider){ brokerStatus.innerText='No broker selected'; return; }
+    try{
+        const response=await fetch(`/api/broker/status?provider=${encodeURIComponent(provider)}`);
+        const result=await response.json();
+        brokerStatus.innerText=result.message || `${brokerProvider.selectedOptions[0].text} selected`;
+        brokerStatus.style.color=result.configured ? '#36e879' : '#facc15';
+    }catch(_){
+        brokerStatus.innerText=`${brokerProvider.selectedOptions[0].text} selected — server setup required`;
+    }
+}
+if(savedBroker) refreshBrokerStatus(savedBroker);
+toggleSharekhanForm();
+brokerProvider.addEventListener('change',toggleSharekhanForm);
 document.getElementById('saveBrokerSetup').onclick=()=>{
     const provider=brokerProvider.value;
     if(!provider){
@@ -625,7 +650,35 @@ document.getElementById('saveBrokerSetup').onclick=()=>{
         return;
     }
     localStorage.setItem('projectSmBrokerProvider',provider);
-    brokerStatus.innerText=`${brokerProvider.selectedOptions[0].text} selected — add API credentials on server`;
+    refreshBrokerStatus(provider);
+};
+document.getElementById('connectSharekhan').onclick=async()=>{
+    const apiKey=document.getElementById('sharekhanApiKey').value.trim();
+    const secureKey=document.getElementById('sharekhanSecureKey').value.trim();
+    if(!apiKey || !secureKey){ brokerStatus.innerText='Enter both Sharekhan API Key and Secure Key.'; return; }
+    const button=document.getElementById('connectSharekhan');
+    button.classList.add('is-busy');
+    button.disabled=true; button.innerText='Connecting…';
+    try{
+        const response=await fetch('/api/broker/local-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:'sharekhan',api_key:apiKey,secure_key:secureKey})});
+        const result=await response.json();
+        brokerStatus.innerText=result.message;
+        brokerStatus.style.color=result.ok ? '#36e879' : '#ff6161';
+        if(result.ok){
+            document.getElementById('sharekhanApiKey').value='';
+            document.getElementById('sharekhanSecureKey').value='';
+            if(result.login_url){
+                const loginWindow=window.open(result.login_url,'sharekhanLogin','popup=yes,width=520,height=760');
+                if(!loginWindow){
+                    brokerStatus.innerText='Popup blocked. Allow popups, then click Connect Sharekhan again.';
+                    brokerStatus.style.color='#facc15';
+                }else{
+                    brokerStatus.innerText='Sharekhan login opened. Complete Login ID, password and OTP/TOTP there.';
+                }
+            }
+        }
+    }catch(_){ brokerStatus.innerText='Could not connect Sharekhan locally.'; brokerStatus.style.color='#ff6161'; }
+    finally{ button.disabled=false; button.classList.remove('is-busy'); button.innerText='Connect Sharekhan'; }
 };
 
 document.querySelectorAll('.nav-menu button').forEach(button=>button.onclick=()=>{
@@ -895,6 +948,76 @@ document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(bu
         openFeaturePage(resolvedTarget,label || 'Project SM');
     };
 });
+document.getElementById('refreshPage').onclick=()=>{
+    const button=document.getElementById('refreshPage');
+    button.disabled=true;
+    button.classList.add('is-busy');
+    button.innerText='Refreshing...';
+    window.setTimeout(()=>location.reload(),180);
+};
+async function loadMarketTicker(){
+    const ticker=document.getElementById('marketTicker');
+    if(!ticker) return;
+    try{
+        const response=await fetch('/api/market-ticker',{cache:'no-store'});
+        const payload=await response.json();
+        const items=(payload.items||[]).map(item=>{
+            const available=Number.isFinite(Number(item.price)) && Number.isFinite(Number(item.percent));
+            const direction=!available ? 'unavailable' : Number(item.percent)>=0 ? 'positive' : 'negative';
+            const label=item.label ? `${item.label}: ${item.name}` : item.name;
+            const value=available
+                ? `${Number(item.price).toLocaleString('en-IN')} (${Number(item.percent)>=0?'+':''}${Number(item.percent).toFixed(2)}%)`
+                : 'Unavailable';
+            return `<span class="ticker-item ${direction}"><b>${label}</b><span>${value}</span></span>`;
+        }).join('');
+        ticker.innerHTML=`<div class="market-ticker-track">${items || '<span class="ticker-item unavailable">Market ticker unavailable</span>'}</div>`;
+    }catch(_){
+        ticker.innerHTML='<div class="market-ticker-track"><span class="ticker-item unavailable">Market ticker unavailable</span></div>';
+    }
+}
+loadMarketTicker();
+window.setInterval(loadMarketTicker,30000);
+async function completeSharekhanCallback(){
+    // Sharekhan's encrypted token can contain a literal "+". URLSearchParams
+    // converts that character to a space, which makes SDK decryption fail.
+    const rawTokenMatch=window.location.search.match(/[?&]request_token=([^&]*)/);
+    const requestToken=rawTokenMatch ? decodeURIComponent(rawTokenMatch[1]) : '';
+    if(!requestToken) return;
+    history.replaceState({},document.title,window.location.pathname);
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#030812;color:#eaf2ff;display:grid;place-items:center;padding:24px;text-align:center';
+    overlay.innerHTML='<div><h2 style="margin-bottom:12px">Connecting Sharekhan...</h2><p id="sharekhanCallbackMessage" style="color:#9cc4ff">Securely exchanging the one-time request token.</p></div>';
+    document.body.appendChild(overlay);
+    const message=overlay.querySelector('#sharekhanCallbackMessage');
+    try{
+        const response=await fetch('/api/broker/sharekhan/callback',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({request_token:requestToken})
+        });
+        const result=await response.json();
+        message.innerText=result.message || (result.ok ? 'Sharekhan connected.' : 'Sharekhan connection failed.');
+        message.style.color=result.ok ? '#36e879' : '#ff6161';
+        if(result.ok){
+            if(window.opener){
+                window.opener.postMessage({type:'project-sm-sharekhan-connected'},window.location.origin);
+                window.setTimeout(()=>window.close(),1300);
+            }else{
+                overlay.querySelector('div').insertAdjacentHTML('beforeend','<button type="button" style="margin-top:16px" onclick="location.href=\'/\'">Open Dashboard</button>');
+            }
+        }
+    }catch(_){
+        message.innerText='Could not complete the Sharekhan session.';
+        message.style.color='#ff6161';
+    }
+}
+window.addEventListener('message',event=>{
+    if(event.origin===window.location.origin && event.data?.type==='project-sm-sharekhan-connected'){
+        brokerStatus.innerText='Sharekhan live session is connected.';
+        brokerStatus.style.color='#36e879';
+    }
+});
+completeSharekhanCallback();
 loadChart(localStorage.getItem('projectSmSelectedSymbol') || "RELIANCE");
 chart.timeScale().subscribeVisibleTimeRangeChange(renderZones);
 window.addEventListener("resize",()=>{chart.applyOptions({width:document.getElementById("chart").clientWidth,height:document.getElementById("chart").clientHeight});renderZones();});

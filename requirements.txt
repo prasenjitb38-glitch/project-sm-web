@@ -3,3 +3,6 @@ pandas
 yfinance
 gunicorn
 pyinstaller
+shareconnect
+websocket-client
+pycryptodome

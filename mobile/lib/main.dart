@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // The release URL can be overridden for another environment at build time.
@@ -7,7 +8,18 @@ const projectSmUrl = String.fromEnvironment(
   defaultValue: 'https://project-sm-web.onrender.com',
 );
 
-void main() => runApp(const ProjectSmMobileApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Project SM uses a desktop-style trading dashboard.  Keep the app wide on
+  // phones so that its panels remain usable instead of collapsing vertically.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  runApp(const ProjectSmMobileApp());
+}
 
 class ProjectSmMobileApp extends StatelessWidget {
   const ProjectSmMobileApp({super.key});
@@ -85,10 +97,28 @@ class _MarketWebViewState extends State<MarketWebView> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _isLoading = true),
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageFinished: (_) async {
+            await _applyDesktopViewport();
+            if (mounted) setState(() => _isLoading = false);
+          },
         ),
       )
       ..loadRequest(Uri.parse(projectSmUrl));
+  }
+
+  Future<void> _applyDesktopViewport() {
+    return _controller.runJavaScript('''
+      (() => {
+        let viewport = document.querySelector('meta[name="viewport"]');
+        if (!viewport) {
+          viewport = document.createElement('meta');
+          viewport.name = 'viewport';
+          document.head.appendChild(viewport);
+        }
+        viewport.content = 'width=1365, initial-scale=0.72, maximum-scale=3.0, user-scalable=yes';
+        document.documentElement.classList.add('project-sm-landscape-app');
+      })();
+    ''');
   }
 
   Future<bool> _goBack() async {
