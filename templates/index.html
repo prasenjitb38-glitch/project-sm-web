@@ -142,6 +142,9 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 .chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
 .sidebar-toggle{display:none;position:absolute;right:8px;top:8px;z-index:35;width:28px;height:28px;padding:0;background:rgba(29,111,255,.5);border:1px solid rgba(126,177,255,.7);font-size:19px;line-height:22px}.app-sidebar{transition:width .2s ease}.workspace{transition:margin-left .2s ease}.sidebar-collapsed .app-sidebar{width:58px;padding-left:7px;padding-right:7px}.sidebar-collapsed .workspace{margin-left:58px}.sidebar-collapsed .brand,.sidebar-collapsed .sentiment-sidebar,.sidebar-collapsed .connection{display:none}.sidebar-collapsed .nav-menu button{font-size:0;text-align:center;padding:11px 4px}.sidebar-collapsed .nav-menu button::first-letter{font-size:17px}.sidebar-collapsed .sidebar-toggle{right:15px}
 .dashboard-title{position:relative}.dashboard-toggle{margin-left:auto;padding:2px 9px;min-width:28px;height:24px;background:rgba(29,111,255,.35);border:1px solid rgba(126,177,255,.65);font-size:16px;line-height:1}.dashboard.dashboard-collapsed .overview,.dashboard.dashboard-collapsed .dashboard-bottom{display:none}.dashboard.dashboard-collapsed{min-height:28px}.dashboard.dashboard-collapsed .dashboard-title{padding-bottom:0}
+.watchlist-dashboard{margin:0 20px 10px;background:#091727;border:1px solid #1a2c43;border-radius:12px;padding:10px}.watchlist-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}.watchlist-head h2{font-size:14px}.watchlist-head span{font-size:10px;color:#9cc4ff}.watchlist-add{display:flex;gap:7px;margin-bottom:8px}.watchlist-add input{width:190px;padding:7px 9px;border:1px solid #31537a;border-radius:6px;background:#071321;color:#fff;text-transform:uppercase}.watchlist-add button{padding:7px 12px;font-size:11px}.watchlist-items{display:flex;flex-wrap:wrap;gap:7px}.watchlist-item{display:flex;align-items:center;gap:7px;padding:6px 9px;background:#102b4d;border:1px solid #294665;border-radius:7px;font-size:11px;cursor:pointer}.watchlist-item:hover{border-color:#79adff}.watchlist-item .remove-watch{color:#ff8b8b;font-weight:bold;cursor:pointer}.watchlist-dashboard:empty{display:none}
+@media(min-width:1000px){.watchlist-dashboard{grid-column:1/-1;grid-row:5;margin:0 20px 6px;overflow:auto}.watchlist-add{margin:0}.watchlist-dashboard .watchlist-head{margin:0 0 5px}}
+@media(max-width:768px){.watchlist-dashboard{margin:8px 20px 14px;min-height:92px}.watchlist-add input{width:220px}}
 /* On phones keep the terminal horizontal, so every dashboard panel remains available. */
 @media(max-width:768px){
   html,body{min-width:1180px;overflow-x:auto;overflow-y:auto}
@@ -204,6 +207,12 @@ Refresh
     <div class="dashboard-title"><h2>Dashboard</h2><span class="live-pill">Live Market: ON ●</span><button id="dashboardToggle" class="dashboard-toggle" type="button" aria-label="Minimize dashboard">−</button></div>
     <div class="overview" id="marketCards"><div class="market-card">Loading live market...</div></div>
     <div class="dashboard-bottom scanner-summary-top"><h3>Scanner Summary</h3><div class="summary-grid"><div class="summary-card">Scanned<b id="summaryScanned">0</b></div><div class="summary-card">Supply<b id="summarySupply">0</b></div><div class="summary-card">Demand<b id="summaryDemand">0</b></div><div class="summary-card">Premium<b id="summaryPremium">0</b></div></div></div>
+</section>
+
+<section id="watchlistPanel" class="watchlist-dashboard">
+    <div class="watchlist-head"><h2>My Watchlist</h2><span id="watchlistStatus">Add symbols to track</span></div>
+    <div class="watchlist-add"><input id="watchlistInput" placeholder="Add symbol (e.g. RELIANCE)"><button id="watchlistAdd" type="button">Add</button></div>
+    <div id="watchlistItems" class="watchlist-items"></div>
 </section>
 
 <section id="featurePanel" class="feature-panel"><div class="feature-head"><h1 id="featureTitle">Feature</h1><button id="closeFeature" type="button">Back to Dashboard</button></div><div id="featureContent" class="feature-content"></div></section>
@@ -990,6 +999,19 @@ if(sidebarToggle){
         sidebarToggle.setAttribute('aria-label',collapsed ? 'Expand sidebar' : 'Minimize sidebar');
     };
 }
+const watchlistItems=document.getElementById('watchlistItems');
+const watchlistInput=document.getElementById('watchlistInput');
+const watchlistSymbols=()=>JSON.parse(localStorage.getItem('projectSmWatchlist')||'["NIFTY50","BANKNIFTY","RELIANCE"]');
+function renderWatchlist(){
+    if(!watchlistItems) return;
+    watchlistItems.innerHTML=watchlistSymbols().map(symbol=>`<div class="watchlist-item" data-symbol="${symbol}"><b>${symbol}</b><span class="watch-price">Loading…</span><span class="remove-watch" data-remove="${symbol}" title="Remove">×</span></div>`).join('');
+    watchlistItems.querySelectorAll('.watchlist-item').forEach(item=>item.onclick=e=>{if(e.target.dataset.remove)return; loadChart(item.dataset.symbol);});
+    watchlistItems.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const next=watchlistSymbols().filter(s=>s!==btn.dataset.remove);localStorage.setItem('projectSmWatchlist',JSON.stringify(next));renderWatchlist();});
+    watchlistSymbols().forEach(async symbol=>{try{const r=await fetch(`/api/chart/${encodeURIComponent(symbol)}/1d`);const d=await r.json();const rows=d.data||d.candles||[];const last=rows[rows.length-1];const price=last?.close??last?.Close??last?.price;const el=watchlistItems.querySelector(`[data-symbol="${symbol}"] .watch-price`);if(el&&price!=null)el.textContent=`₹${Number(price).toLocaleString('en-IN',{maximumFractionDigits:2})`;}catch(_){}});
+}
+document.getElementById('watchlistAdd')?.addEventListener('click',()=>{const symbol=(watchlistInput.value||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');if(!symbol)return;const next=watchlistSymbols();if(!next.includes(symbol))next.push(symbol);localStorage.setItem('projectSmWatchlist',JSON.stringify(next));watchlistInput.value='';renderWatchlist();});
+watchlistInput?.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('watchlistAdd')?.click();});
+renderWatchlist();
 async function loadMarketTicker(){
     const ticker=document.getElementById('marketTicker');
     if(!ticker) return;
