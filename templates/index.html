@@ -140,11 +140,12 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 @media(max-width:900px){.market-ticker{display:none}}
 /* Transparent vertical chart toolbar on the left. */
 .chart-box{position:relative}.chart-tools{position:absolute;left:8px;top:78px;z-index:25;display:flex;flex-direction:column;gap:5px;padding:5px;background:rgba(7,19,33,.42);border:1px solid rgba(74,111,154,.35);border-radius:7px;backdrop-filter:blur(2px)}.chart-tools button{width:28px;height:27px;padding:0;background:rgba(14,34,57,.42);border:1px solid rgba(110,147,190,.4);color:#d9ebff;border-radius:5px;font-size:11px;cursor:pointer}.chart-tools button:hover{background:rgba(29,111,255,.58)}.chart-tools button.tool-active{background:rgba(245,158,11,.78);color:#111827;border-color:#fbbf24}.chart-tools .drawing-status{display:none}@media(max-width:1100px){.chart-tools-label,.drawing-status{display:none}}
+.sidebar-toggle{display:none;position:absolute;right:8px;top:8px;z-index:35;width:28px;height:28px;padding:0;background:rgba(29,111,255,.5);border:1px solid rgba(126,177,255,.7);font-size:19px;line-height:22px}.app-sidebar{transition:width .2s ease}.workspace{transition:margin-left .2s ease}.sidebar-collapsed .app-sidebar{width:58px;padding-left:7px;padding-right:7px}.sidebar-collapsed .workspace{margin-left:58px}.sidebar-collapsed .brand,.sidebar-collapsed .sentiment-sidebar,.sidebar-collapsed .connection{display:none}.sidebar-collapsed .nav-menu button{font-size:0;text-align:center;padding:11px 4px}.sidebar-collapsed .nav-menu button::first-letter{font-size:17px}.sidebar-collapsed .sidebar-toggle{right:15px}
 .dashboard-title{position:relative}.dashboard-toggle{margin-left:auto;padding:2px 9px;min-width:28px;height:24px;background:rgba(29,111,255,.35);border:1px solid rgba(126,177,255,.65);font-size:16px;line-height:1}.dashboard.dashboard-collapsed .overview,.dashboard.dashboard-collapsed .dashboard-bottom{display:none}.dashboard.dashboard-collapsed{min-height:28px}.dashboard.dashboard-collapsed .dashboard-title{padding-bottom:0}
 /* On phones keep the terminal horizontal, so every dashboard panel remains available. */
 @media(max-width:768px){
   html,body{min-width:1180px;overflow-x:auto;overflow-y:auto}
-  .app-sidebar{position:fixed;left:0;top:0;bottom:0;width:160px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;padding:12px 8px}
+  .app-sidebar{position:fixed;left:0;top:0;bottom:0;width:160px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;padding:12px 8px}.sidebar-toggle{display:block}
   .brand,.connection{display:block}.brand{padding-bottom:14px}.brand-logo{width:108px;height:90px}.nav-menu{display:grid;gap:4px}.nav-menu button{white-space:nowrap;padding:9px 8px;font-size:12px}
   .workspace{margin-left:160px;width:1020px;min-width:1020px;min-height:100vh;height:auto;display:grid;grid-template-columns:minmax(0,1.30fr) minmax(0,.72fr) minmax(0,.44fr) minmax(0,.44fr);grid-template-rows:40px 70px minmax(420px,auto) 190px;overflow:visible}
   .header{display:none}.topbar{grid-column:1/-1;grid-row:1;padding:6px 20px;justify-content:flex-end;flex-wrap:nowrap}.topbar .search-wrap{flex:0 0 180px;min-width:0}.topbar #search{height:31px;font-size:10px}.topbar button{padding:8px 12px;font-size:11px}
@@ -163,6 +164,7 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
 <body>
 
 <aside class="app-sidebar">
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Minimize sidebar">‹</button>
     <div class="brand"><img class="brand-logo" src="{{ url_for('static', filename='images/advanced-stock-market-scanner.png') }}" alt="Advanced Stock Market Scanner logo"></div>
     <nav class="nav-menu">
         <button class="active" data-target="dashboard">▣ &nbsp;Dashboard</button>
@@ -978,6 +980,14 @@ if(dashboardToggle){
         const collapsed=panel.classList.toggle('dashboard-collapsed');
         dashboardToggle.textContent=collapsed ? '+' : '−';
         dashboardToggle.setAttribute('aria-label',collapsed ? 'Expand dashboard' : 'Minimize dashboard');
+    };
+}
+const sidebarToggle=document.getElementById('sidebarToggle');
+if(sidebarToggle){
+    sidebarToggle.onclick=()=>{
+        const collapsed=document.body.classList.toggle('sidebar-collapsed');
+        sidebarToggle.textContent=collapsed ? '›' : '‹';
+        sidebarToggle.setAttribute('aria-label',collapsed ? 'Expand sidebar' : 'Minimize sidebar');
     };
 }
 async function loadMarketTicker(){
