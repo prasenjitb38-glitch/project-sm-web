@@ -627,11 +627,16 @@ document.getElementById('runScanner').onclick=async()=>{
     const button=document.getElementById('runScanner'); button.disabled=true; button.classList.add('is-scanning'); button.innerText='Scanning…';
     const universe=document.getElementById('scannerUniverse');
     document.getElementById('scannerStatus').innerText=`Starting ${universe.options[universe.selectedIndex].text} scan...`;
-    const response=await fetch('/api/scanner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timeframe:document.getElementById('scannerTimeframe').value,universe:universe.value})});
-    const data=await response.json();
-    if(data.error){ document.getElementById('scannerStatus').innerText=data.error; button.disabled=false; button.classList.remove('is-scanning'); button.innerText='Scan Selected Index'; return; }
-    clearInterval(scannerPoller); await pollScanner(data.job_id);
-    scannerPoller=setInterval(()=>pollScanner(data.job_id),1500);
+    try{
+        const response=await fetch('/api/scanner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timeframe:document.getElementById('scannerTimeframe').value,universe:universe.value})});
+        const data=await response.json();
+        if(!response.ok || data.error) throw new Error(data.error || 'Could not start scanner');
+        clearInterval(scannerPoller); await pollScanner(data.job_id);
+        scannerPoller=setInterval(()=>pollScanner(data.job_id),1500);
+    }catch(error){
+        document.getElementById('scannerStatus').innerText=error.message || 'Scanner unavailable. Try again.';
+        button.disabled=false; button.classList.remove('is-scanning'); button.innerText='Scan Selected Index';
+    }
 };
 
 document.getElementById('scoreFilter').onchange=()=>{
