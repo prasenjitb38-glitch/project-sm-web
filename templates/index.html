@@ -173,7 +173,7 @@ html,body{background:#030812}body{color:#eaf2ff}.app-sidebar{background:linear-g
     <nav class="nav-menu">
         <button class="active" data-target="dashboard">▣ &nbsp;Dashboard</button>
         <button data-target="chartArea">⌁ &nbsp;Live Market</button>
-        <button id="watchlistNav" type="button">▣ &nbsp;Watchlist</button>
+        <button id="watchlistNav" data-watchlist-toggle="1" type="button">▣ &nbsp;Watchlist</button>
         <button data-target="scannerPanel">▤ &nbsp;Scanner</button>
         <button data-target="chartArea">◇ &nbsp;Supply &amp; Demand</button>
         <button data-target="chartArea">⌘ &nbsp;Multi-Timeframe</button>
@@ -944,7 +944,7 @@ document.getElementById('closeFundamental').onclick=closeFundamentalScan;
 const navigation=document.querySelector('.nav-menu');
 navigation.insertBefore(document.getElementById('fundamentalButton'), navigation.children[1]);
 document.querySelector('.workspace').appendChild(document.getElementById('stockTrendPanel'));
-document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(button=>{
+document.querySelectorAll('.nav-menu button:not(#fundamentalButton):not(#watchlistNav)').forEach(button=>{
     const originalClick=button.onclick;
     button.onclick=()=>{ closeFundamentalScan(); originalClick(); };
 });
@@ -966,7 +966,7 @@ function openFeaturePage(targetId,title){
     setTimeout(()=>{ if(targetId==='chartArea'){ chart.applyOptions({width:document.getElementById('chart').clientWidth,height:document.getElementById('chart').clientHeight}); chart.timeScale().fitContent(); } },80);
 }
 document.getElementById('closeFeature').onclick=restoreFeaturePage;
-document.querySelectorAll('.nav-menu button:not(#fundamentalButton)').forEach(button=>{
+document.querySelectorAll('.nav-menu button:not(#fundamentalButton):not(#watchlistNav)').forEach(button=>{
     const target=button.dataset.target;
     button.onclick=()=>{
         closeFundamentalScan();
@@ -1002,13 +1002,13 @@ if(sidebarToggle){
 }
 const watchlistItems=document.getElementById('watchlistItems');
 const watchlistInput=document.getElementById('watchlistInput');
-const watchlistSymbols=()=>JSON.parse(localStorage.getItem('projectSmWatchlist')||'["NIFTY50","BANKNIFTY","RELIANCE"]');
+const watchlistSymbols=()=>{try{const value=JSON.parse(localStorage.getItem('projectSmWatchlist')||'["NIFTY50","BANKNIFTY","RELIANCE"]');return Array.isArray(value)?value:[];}catch(_){return ['NIFTY50','BANKNIFTY','RELIANCE'];}};
 function renderWatchlist(){
     if(!watchlistItems) return;
     watchlistItems.innerHTML=watchlistSymbols().map(symbol=>`<div class="watchlist-item" data-symbol="${symbol}"><b>${symbol}</b><span class="watch-price">Loading…</span><span class="remove-watch" data-remove="${symbol}" title="Remove">×</span></div>`).join('');
     watchlistItems.querySelectorAll('.watchlist-item').forEach(item=>item.onclick=e=>{if(e.target.dataset.remove)return; loadChart(item.dataset.symbol);});
     watchlistItems.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const next=watchlistSymbols().filter(s=>s!==btn.dataset.remove);localStorage.setItem('projectSmWatchlist',JSON.stringify(next));renderWatchlist();});
-    watchlistSymbols().forEach(async symbol=>{try{const r=await fetch(`/api/chart/${encodeURIComponent(symbol)}/1d`);const d=await r.json();const rows=d.data||d.candles||[];const last=rows[rows.length-1];const price=last?.close??last?.Close??last?.price;const el=watchlistItems.querySelector(`[data-symbol="${symbol}"] .watch-price`);if(el&&price!=null)el.textContent=`₹${Number(price).toLocaleString('en-IN',{maximumFractionDigits:2})`;}catch(_){}});
+    watchlistSymbols().forEach(async symbol=>{try{const r=await fetch(`/api/chart/${encodeURIComponent(symbol)}/1d`);const d=await r.json();const rows=d.data||d.candles||[];const last=rows[rows.length-1];const price=last?.close??last?.Close??last?.price;const el=watchlistItems.querySelector(`[data-symbol="${symbol}"] .watch-price`);if(el&&price!=null)el.textContent=`₹${Number(price).toLocaleString('en-IN',{maximumFractionDigits:2})}`;}catch(_){}});
 }
 document.getElementById('watchlistAdd')?.addEventListener('click',()=>{const symbol=(watchlistInput.value||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');if(!symbol)return;const next=watchlistSymbols();if(!next.includes(symbol))next.push(symbol);localStorage.setItem('projectSmWatchlist',JSON.stringify(next));watchlistInput.value='';renderWatchlist();});
 watchlistInput?.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('watchlistAdd')?.click();});
