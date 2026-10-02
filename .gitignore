@@ -14,3 +14,4 @@ mobile/.idea/
 npm-debug.log
 *.iml
 hs_err_pid*.log
+data/paper_trading.sqlite
